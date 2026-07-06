@@ -10,7 +10,7 @@ export default async function AppLayout({
 }>) {
   const user = await currentUser();
   if (!user) redirect("/sign-in");
-  if (!user.unsafeMetadata?.onboardingComplete) redirect("/onboarding");
+  if (!user.publicMetadata?.onboardingComplete) redirect("/onboarding");
 
   return (
     <div className="flex min-h-screen flex-col bg-background">

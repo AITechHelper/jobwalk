@@ -35,14 +35,15 @@ export default function OnboardingPage() {
     setSaving(true);
     setError(null);
     try {
-      await user.update({
-        unsafeMetadata: {
-          businessName,
-          phone,
-          tradeType,
-          onboardingComplete: true,
-        },
+      const res = await fetch("/api/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ businessName, phone, tradeType }),
       });
+      if (!res.ok) throw new Error(`onboarding failed: ${res.status}`);
+      // Refresh the Clerk session so the onboardingComplete flag is
+      // visible to the server-side gate before we navigate.
+      await user.reload();
       router.push("/record");
     } catch {
       setError("Couldn't save your info — please try again.");
