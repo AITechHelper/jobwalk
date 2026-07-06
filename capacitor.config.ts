@@ -13,6 +13,17 @@ const config: CapacitorConfig = {
   server: {
     url: PRODUCTION_URL,
     cleartext: false,
+    // Keep auth redirects inside the WebView instead of bouncing to Safari.
+    // The production URL host is trusted automatically; these cover Clerk's
+    // hosted auth domains (dev instance uses *.accounts.dev) and its bot-
+    // detection challenge. With Clerk production keys on a custom domain,
+    // auth becomes same-origin and most of these are no longer needed.
+    allowNavigation: [
+      "*.accounts.dev",
+      "*.clerk.accounts.dev",
+      "clerk.jobwalk-ebon.vercel.app",
+      "challenges.cloudflare.com",
+    ],
   },
   ios: {
     contentInset: "always",
