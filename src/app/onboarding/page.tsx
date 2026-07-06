@@ -51,13 +51,13 @@ export default function OnboardingPage() {
   }
 
   const inputClasses =
-    "w-full rounded-lg border border-gray-700 bg-gray-900 px-4 py-3 text-foreground placeholder-gray-500 focus:border-brand focus:outline-none";
+    "w-full rounded-lg border border-white/10 bg-navy px-4 py-3 text-foreground placeholder-white/40 focus:border-brand focus:outline-none";
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-navy p-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold">Tell us about your business</h1>
-        <p className="mt-1 mb-8 text-sm text-gray-400">
+        <p className="mt-1 mb-8 text-sm text-white/60">
           This goes on your reports, so clients know who they came from.
         </p>
 
@@ -110,7 +110,7 @@ export default function OnboardingPage() {
           <button
             type="submit"
             disabled={saving}
-            className="mt-2 rounded-lg bg-brand px-4 py-3 font-semibold text-white transition hover:bg-brand-light disabled:opacity-50"
+            className="mt-2 rounded-lg bg-brand px-4 py-3 font-semibold text-white transition hover:bg-brand/85 disabled:opacity-50"
           >
             {saving ? "Saving..." : "Start walking jobs"}
           </button>

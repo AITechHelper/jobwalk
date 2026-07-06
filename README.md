@@ -28,5 +28,6 @@ npm install
 npm run dev
 ```
 
-Brand colors: `#0a0f1e` navy · `#0066ff` electric blue · `#3385ff` light blue
-(Tailwind tokens: `navy`, `brand`, `brand-light`).
+Brand palette: black background · white text · `#0a0f1e` navy surfaces ·
+`#3385ff` blue accent (Tailwind tokens: `background`, `foreground`, `navy`,
+`brand`; muted text is white at reduced opacity, e.g. `text-white/60`).
