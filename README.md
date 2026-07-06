@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JobWalk
 
-## Getting Started
+Turn your job walk into a client-ready report.
 
-First, run the development server:
+Free mobile app for trades contractors (roofing, HVAC, construction). Walk the
+job site, narrate what you see, snap photos — JobWalk transcribes the audio,
+matches each photo to what you were saying when you took it, and generates a
+clean, professional report you can send to clients or coworkers.
+
+Built by [AI Tech Helper LLC](https://aitechhelper.com), Tulsa, OK.
+
+## Stack
+
+- Next.js (App Router) + React + Tailwind — web app and API
+- Capacitor — iOS/Android shell (camera + mic); API routes stay on Vercel
+- Clerk — auth
+- Neon Postgres — database
+- OpenAI Whisper — timestamped transcription
+- Claude (Sonnet) — report generation (text-only; photos matched by timestamp)
+- Vercel Blob — photo/audio/PDF storage
+- Vercel — hosting and deploys
+
+## Development
 
 ```bash
+cp .env.example .env.local   # fill in keys
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Brand colors: `#0a0f1e` navy · `#0066ff` electric blue · `#3385ff` light blue
+(Tailwind tokens: `navy`, `brand`, `brand-light`).
