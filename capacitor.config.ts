@@ -30,9 +30,12 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 1500,
+      // Stay up until the web app mounts and calls SplashScreen.hide()
+      // (see SplashHider) — avoids a black WebView during the remote load.
+      launchAutoHide: false,
       backgroundColor: "#000000",
-      showSpinner: false,
+      showSpinner: true,
+      spinnerColor: "#3385ff",
     },
   },
 };
