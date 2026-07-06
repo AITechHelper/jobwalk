@@ -26,10 +26,9 @@ export async function processJob(jobId: string): Promise<void> {
       .from(photos)
       .where(eq(photos.jobId, jobId));
 
+    // Empty segments are fine — the report falls back to a photo log. The
+    // pipeline only fails on real errors (transcription/API failures).
     const { segments } = await transcribeAudio(job.audioUrl);
-    if (segments.length === 0) {
-      throw new Error("Transcription produced no speech segments");
-    }
 
     const matched = matchPhotosToSegments(
       segments,

@@ -8,10 +8,17 @@ export type TranscriptSegment = {
 
 // Downloads the recorded audio from Blob storage and transcribes it with
 // segment-level timestamps — the timestamps are what photo matching runs on.
+// Env vars occasionally pick up stray non-ASCII characters when pasted from a
+// masked field; the SDK then crashes building the Authorization header. Keep
+// only printable ASCII so a bad paste degrades to a normal auth error instead.
+function cleanKey(key: string | undefined): string {
+  return (key ?? "").replace(/[^\x20-\x7E]/g, "").trim();
+}
+
 export async function transcribeAudio(
   audioUrl: string,
 ): Promise<{ segments: TranscriptSegment[]; fullText: string }> {
-  const openai = new OpenAI();
+  const openai = new OpenAI({ apiKey: cleanKey(process.env.OPENAI_API_KEY) });
 
   const res = await fetch(audioUrl);
   if (!res.ok) {
@@ -32,13 +39,17 @@ export async function transcribeAudio(
     model: "whisper-1",
     response_format: "verbose_json",
     timestamp_granularities: ["segment"],
+    language: "en", // avoid foreign-language hallucinations on quiet audio
+    temperature: 0,
   });
 
-  const segments = (transcription.segments ?? []).map((s) => ({
-    start: s.start,
-    end: s.end,
-    text: s.text.trim(),
-  }));
+  const segments = (transcription.segments ?? [])
+    // Drop segments Whisper flags as likely silence — this is what produces
+    // hallucinated filler ("Thank you.", etc.) when no one is speaking.
+    .filter((s) => (s.no_speech_prob ?? 0) < 0.6)
+    .map((s) => ({ start: s.start, end: s.end, text: s.text.trim() }))
+    .filter((s) => s.text.length > 0);
 
-  return { segments, fullText: transcription.text };
+  const fullText = segments.map((s) => s.text).join(" ").trim();
+  return { segments, fullText };
 }

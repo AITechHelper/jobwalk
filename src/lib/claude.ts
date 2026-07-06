@@ -55,20 +55,38 @@ const REPORT_SCHEMA = {
   additionalProperties: false,
 } as const;
 
-const SYSTEM_PROMPT = `You turn a trades contractor's spoken job-site walkthrough into a clean, professional written report the contractor can send to a client.
+const SYSTEM_PROMPT = `You turn a trades contractor's job-site walkthrough into a clean, professional written report they can send to a client. A walkthrough has timestamped photos (usually) and spoken narration (sometimes).
+
+Always produce a useful report from whatever is available — never refuse and never leave it empty:
+- Plenty of narration: write it up as findings grouped by area or topic in walkthrough order, cleaned up from speech, with each photo placed in the area whose discussion matches its timestamp.
+- Little or no narration: don't force a narrative. Produce a professional visual record instead — organize the photos into one or a few sensibly-titled sections in the order they were taken, give each a brief neutral caption based only on its position/time (e.g. "Photo taken at 0:12"), and note in the summary that this report is primarily a photo log because limited narration was captured.
 
 Rules:
-- Write in clear, professional language a homeowner or client can understand. Keep trade terminology where it's precise, but don't invent details that weren't said.
-- Fix the roughness of speech (filler words, restarts, slang) without changing meaning.
-- Group findings by area or topic following the order of the walkthrough.
-- Photo placement: each photo has a timestamp and was taken while the contractor was talking about something. Place each photo's ID in the area whose discussion matches its timestamp. Every photo ID must be used exactly once.
-- Never fabricate observations, measurements, or recommendations that are not supported by the transcript.`;
+- NEVER fabricate observations, measurements, conditions, or recommendations that the narration doesn't support. When narration is thin or absent, keep everything neutral and factual — describe the record, not imagined findings.
+- Every photo ID provided must appear in exactly one area.
+- Return at least one area whenever there is any photo or narration.
+- Clear language a homeowner understands; keep precise trade terms where used.
+- recommendations may be an empty array if none were stated or clearly implied.`;
+
+// Strip stray non-ASCII characters a key can pick up from a masked-field paste
+// so a bad env value degrades to a normal auth error instead of a hard crash.
+function cleanKey(key: string | undefined): string {
+  return (key ?? "").replace(/[^\x20-\x7E]/g, "").trim();
+}
 
 export async function generateReport(
   segments: TranscriptSegment[],
   matchedPhotos: MatchedPhoto[],
 ): Promise<Report> {
-  const anthropic = new Anthropic();
+  const anthropic = new Anthropic({
+    apiKey: cleanKey(process.env.ANTHROPIC_API_KEY),
+  });
+
+  const wordCount = segments.reduce(
+    (n, s) => n + s.text.split(/\s+/).filter(Boolean).length,
+    0,
+  );
+  const hasNarration = wordCount >= 6;
 
   const transcriptLines = segments
     .map((s, i) => {
@@ -86,6 +104,23 @@ export async function generateReport(
     })
     .join("\n");
 
+  // Always give the model the full ordered photo roster so photos are covered
+  // even when there are no transcript segments to attach markers to.
+  const photoRoster =
+    matchedPhotos
+      .slice()
+      .sort((a, b) => a.offsetSeconds - b.offsetSeconds)
+      .map(
+        (p) => `- PHOTO ${p.photoId} taken at ${formatTimestamp(p.offsetSeconds)}`,
+      )
+      .join("\n") || "(No photos were taken.)";
+
+  const userContent = hasNarration
+    ? `Timestamped transcript of the walkthrough, with photo markers showing when each photo was taken:\n\n${transcriptLines}\n\nAll photos captured (in order), each of which must appear in exactly one area:\n${photoRoster}\n\nGenerate the walkthrough report.`
+    : `This walkthrough captured little or no spoken narration${
+        wordCount > 0 ? ` (only: "${segments.map((s) => s.text).join(" ")}")` : ""
+      }. Build a professional photo-log report from the photos below. Each photo ID must appear in exactly one area.\n\nPhotos captured (in order):\n${photoRoster}\n\nGenerate the walkthrough report.`;
+
   const response = await anthropic.messages.create({
     model: "claude-sonnet-5",
     max_tokens: 8192,
@@ -93,12 +128,7 @@ export async function generateReport(
     output_config: {
       format: { type: "json_schema", schema: REPORT_SCHEMA },
     },
-    messages: [
-      {
-        role: "user",
-        content: `Here is the timestamped transcript of a job-site walkthrough, with photo markers showing when each photo was taken:\n\n${transcriptLines}\n\nGenerate the walkthrough report.`,
-      },
-    ],
+    messages: [{ role: "user", content: userContent }],
   });
 
   if (response.stop_reason === "refusal") {
@@ -124,7 +154,16 @@ export async function generateReport(
     area.photoIds.forEach((id) => placed.add(id));
   }
   const unplaced = matchedPhotos.filter((p) => !placed.has(p.photoId));
-  if (unplaced.length > 0 && report.areas.length > 0) {
+  if (unplaced.length > 0) {
+    // Guarantee an area exists to hold any photos the model left out.
+    if (report.areas.length === 0) {
+      report.areas.push({
+        title: "Site Photos",
+        narrative:
+          "Photos captured during the walkthrough, in the order they were taken.",
+        photoIds: [],
+      });
+    }
     for (const photo of unplaced) {
       const fraction =
         segments.length > 1 ? photo.segmentIndex / (segments.length - 1) : 0;
