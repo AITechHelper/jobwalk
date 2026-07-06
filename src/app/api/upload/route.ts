@@ -18,17 +18,12 @@ export async function POST(req: Request) {
       body,
       request: req,
       onBeforeGenerateToken: async () => ({
-        allowedContentTypes: [
-          "audio/webm",
-          "audio/mp4",
-          "audio/mpeg",
-          "audio/ogg",
-          "audio/wav",
-          "image/jpeg",
-          "image/png",
-          "image/webp",
-          "image/heic",
-        ],
+        // Accept whatever audio/image the contractor's device produces —
+        // iOS/Android tag MediaRecorder output inconsistently (e.g. audio-only
+        // recordings can come through as video/mp4). The request is already
+        // gated by Clerk auth and the size cap below, so an exact content-type
+        // allowlist only causes false rejections without adding real safety.
+        allowedContentTypes: ["audio/*", "video/*", "image/*"],
         maximumSizeInBytes: 100 * 1024 * 1024, // 100MB — long walkthroughs
         addRandomSuffix: true,
       }),

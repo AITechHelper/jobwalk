@@ -86,9 +86,10 @@ export default function WalkthroughRecorder() {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
       recorder.onstop = () => {
-        audioBlobRef.current = new Blob(chunksRef.current, {
-          type: recorder.mimeType || "audio/webm",
-        });
+        // Strip any codec suffix so the type is a clean base (e.g.
+        // "audio/mp4;codecs=..." → "audio/mp4") for a reliable extension.
+        const cleanType = (recorder.mimeType || "audio/mp4").split(";")[0];
+        audioBlobRef.current = new Blob(chunksRef.current, { type: cleanType });
         stream.getTracks().forEach((t) => t.stop());
       };
       recorder.start(1000);
@@ -184,7 +185,10 @@ export default function WalkthroughRecorder() {
       const { job } = await jobRes.json();
 
       setSubmitStep("Uploading recording...");
-      const ext = audioBlob.type.includes("mp4") ? "mp4" : "webm";
+      const ext =
+        audioBlob.type.includes("mp4") || audioBlob.type.includes("m4a")
+          ? "mp4"
+          : "webm";
       const audioBlobResult = await upload(
         `jobs/${job.id}/audio.${ext}`,
         audioBlob,
