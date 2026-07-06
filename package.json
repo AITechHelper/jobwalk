@@ -8,10 +8,15 @@
     "start": "next start",
     "lint": "eslint",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "cap:sync": "cap sync ios",
+    "cap:open": "cap open ios"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
+    "@capacitor/camera": "^8.2.0",
+    "@capacitor/core": "^8.4.1",
+    "@capacitor/splash-screen": "^8.0.1",
     "@clerk/nextjs": "^7.5.13",
     "@neondatabase/serverless": "^1.1.0",
     "@vercel/blob": "^2.5.0",
@@ -22,6 +27,8 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.4.1",
+    "@capacitor/ios": "^8.4.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

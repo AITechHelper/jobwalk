@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>JobWalk</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #000000;
+        color: #ffffff;
+        font-family: -apple-system, system-ui, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .wordmark {
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .accent {
+        color: #3385ff;
+      }
+      .note {
+        position: absolute;
+        bottom: 3rem;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.6);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Shown only if the device is offline; the native shell otherwise loads
+         the live app from server.url in capacitor.config.ts. -->
+    <div>
+      <div class="wordmark">Job<span class="accent">Walk</span></div>
+    </div>
+    <p class="note">Connect to the internet to continue.</p>
+  </body>
+</html>
