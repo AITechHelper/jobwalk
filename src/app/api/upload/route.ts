@@ -18,22 +18,19 @@ export async function POST(req: Request) {
       body,
       request: req,
       onBeforeGenerateToken: async () => ({
-        // Accept whatever audio/image the contractor's device produces —
-        // iOS/Android tag MediaRecorder output inconsistently (e.g. audio-only
-        // recordings can come through as video/mp4). The request is already
-        // gated by Clerk auth and the size cap below, so an exact content-type
-        // allowlist only causes false rejections without adding real safety.
-        allowedContentTypes: ["audio/*", "video/*", "image/*"],
+        // No content-type allowlist: iOS/Android tag MediaRecorder output
+        // inconsistently, and the request is already gated by Clerk auth and
+        // the size cap. Restricting types only causes false rejections.
         maximumSizeInBytes: 100 * 1024 * 1024, // 100MB — long walkthroughs
         addRandomSuffix: true,
       }),
       onUploadCompleted: async () => {
-        // Metadata is persisted by the finalize endpoint instead; nothing
-        // to do here (this callback doesn't fire on localhost anyway).
+        // Metadata is persisted by the finalize endpoint instead.
       },
     });
     return NextResponse.json(result);
   } catch (err) {
+    console.error("[upload] handleUpload failed:", err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Upload failed" },
       { status: 400 },
