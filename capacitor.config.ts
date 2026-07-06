@@ -4,7 +4,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 // app relies on server-side routes (Clerk auth, the DB, the AI pipeline), it
 // can't be statically exported — the native app loads the live production URL
 // instead. Update `server.url` to the custom domain once DNS is set up.
-const PRODUCTION_URL = "https://jobwalk-ebon.vercel.app";
+const PRODUCTION_URL = "https://app.aitechhelper.com";
 
 const config: CapacitorConfig = {
   appId: "com.aitechhelper.jobwalk",
@@ -19,9 +19,8 @@ const config: CapacitorConfig = {
     // detection challenge. With Clerk production keys on a custom domain,
     // auth becomes same-origin and most of these are no longer needed.
     allowNavigation: [
-      "*.accounts.dev",
-      "*.clerk.accounts.dev",
-      "clerk.jobwalk-ebon.vercel.app",
+      "clerk.aitechhelper.com",
+      "accounts.aitechhelper.com",
       "challenges.cloudflare.com",
     ],
   },
