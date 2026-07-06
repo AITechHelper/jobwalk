@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -18,6 +18,17 @@ export const metadata: Metadata = {
   title: "JobWalk",
   description:
     "Walk the job, narrate what you see, snap photos — get a client-ready report.",
+};
+
+// App-like viewport: prevent pinch-zoom and the iOS focus auto-zoom that
+// otherwise leaves the WebView stuck zoomed in. viewportFit covers the notch.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#000000",
 };
 
 export default function RootLayout({

@@ -19,3 +19,17 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+/* iOS zooms the page when focusing an input smaller than 16px and then gets
+   stuck. Force form controls to 16px so that never triggers. */
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+/* Disable the iOS tap-to-zoom / text auto-sizing quirks in the WebView. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
