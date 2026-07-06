@@ -28,55 +28,70 @@ export default function WalkthroughRecorder() {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>("idle");
   const [submitStep, setSubmitStep] = useState("");
-  const audioBlobRef = useRef<Blob | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [duration, setDuration] = useState(0);
+  const [flash, setFlash] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const audioBlobRef = useRef<Blob | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const chunksRef = useRef<Blob[]>([]);
   const startedAtRef = useRef(0);
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const pendingOffsetRef = useRef(0);
 
   useEffect(() => {
     return () => {
-      // Release mic and preview memory if the user navigates away
       streamRef.current?.getTracks().forEach((t) => t.stop());
       if (tickRef.current) clearInterval(tickRef.current);
     };
   }, []);
 
+  // Attach the live camera stream to the preview once the recording view mounts.
+  useEffect(() => {
+    if (phase === "recording" && videoRef.current && streamRef.current) {
+      const video = videoRef.current;
+      video.srcObject = streamRef.current;
+      video.muted = true;
+      video.play().catch(() => {});
+    }
+  }, [phase]);
+
   async function startRecording() {
     setError(null);
     try {
+      // One stream for both: audio feeds the recorder, video feeds the live
+      // preview + instant photo capture.
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
+        video: {
+          facingMode: "environment",
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+        },
       });
       streamRef.current = stream;
       chunksRef.current = [];
 
+      // Record audio only — the report is text-based, no video is uploaded.
+      const audioStream = new MediaStream(stream.getAudioTracks());
       const recorder = new MediaRecorder(
-        stream,
+        audioStream,
         pickMimeType() ? { mimeType: pickMimeType() } : undefined,
       );
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
       recorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, {
+        audioBlobRef.current = new Blob(chunksRef.current, {
           type: recorder.mimeType || "audio/webm",
         });
-        audioBlobRef.current = blob;
-        setAudioUrl(URL.createObjectURL(blob));
         stream.getTracks().forEach((t) => t.stop());
       };
-      recorder.start(1000); // gather data every second
+      recorder.start(1000);
       recorderRef.current = recorder;
       startedAtRef.current = Date.now();
       setElapsed(0);
@@ -86,9 +101,47 @@ export default function WalkthroughRecorder() {
       setPhase("recording");
     } catch {
       setError(
-        "Microphone access was denied. Allow mic access in your browser settings and try again.",
+        "JobWalk needs camera and microphone access to record a walkthrough. Allow both in your settings and try again.",
       );
     }
+  }
+
+  function snapPhoto() {
+    const video = videoRef.current;
+    if (!video || !video.videoWidth) return;
+
+    // Stamp the offset the instant the shutter is tapped.
+    const offsetSeconds = (Date.now() - startedAtRef.current) / 1000;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    setFlash(true);
+    setTimeout(() => setFlash(false), 120);
+
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const file = new File([blob], `photo-${Date.now()}.jpg`, {
+          type: "image/jpeg",
+        });
+        setPhotos((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            file,
+            previewUrl: URL.createObjectURL(blob),
+            offsetSeconds,
+          },
+        ]);
+      },
+      "image/jpeg",
+      0.85,
+    );
   }
 
   function stopRecording() {
@@ -96,28 +149,6 @@ export default function WalkthroughRecorder() {
     if (tickRef.current) clearInterval(tickRef.current);
     recorderRef.current?.stop();
     setPhase("review");
-  }
-
-  function handleAddPhotoClick() {
-    // Stamp the offset at tap time — closest to what the contractor was
-    // narrating — not when the camera returns the file.
-    pendingOffsetRef.current = (Date.now() - startedAtRef.current) / 1000;
-    fileInputRef.current?.click();
-  }
-
-  function handlePhotoSelected(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setPhotos((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        file,
-        previewUrl: URL.createObjectURL(file),
-        offsetSeconds: pendingOffsetRef.current,
-      },
-    ]);
-    e.target.value = ""; // allow snapping again immediately
   }
 
   function removePhoto(id: string) {
@@ -130,10 +161,8 @@ export default function WalkthroughRecorder() {
 
   function discard() {
     photos.forEach((p) => URL.revokeObjectURL(p.previewUrl));
-    if (audioUrl) URL.revokeObjectURL(audioUrl);
     audioBlobRef.current = null;
     setPhotos([]);
-    setAudioUrl(null);
     setTitle("");
     setElapsed(0);
     setPhase("idle");
@@ -145,7 +174,6 @@ export default function WalkthroughRecorder() {
     setPhase("submitting");
     setError(null);
     try {
-      // 1. Create the job row
       setSubmitStep("Creating job...");
       const jobRes = await fetch("/api/jobs", {
         method: "POST",
@@ -155,7 +183,6 @@ export default function WalkthroughRecorder() {
       if (!jobRes.ok) throw new Error(`job create failed: ${jobRes.status}`);
       const { job } = await jobRes.json();
 
-      // 2. Upload audio + photos directly to Blob storage
       setSubmitStep("Uploading recording...");
       const ext = audioBlob.type.includes("mp4") ? "mp4" : "webm";
       const audioBlobResult = await upload(
@@ -167,19 +194,17 @@ export default function WalkthroughRecorder() {
       const uploadedPhotos: { url: string; offsetSeconds: number }[] = [];
       for (let i = 0; i < photos.length; i++) {
         setSubmitStep(`Uploading photo ${i + 1} of ${photos.length}...`);
-        const p = photos[i];
         const result = await upload(
           `jobs/${job.id}/photo-${i}.jpg`,
-          p.file,
+          photos[i].file,
           { access: "public", handleUploadUrl: "/api/upload" },
         );
         uploadedPhotos.push({
           url: result.url,
-          offsetSeconds: p.offsetSeconds,
+          offsetSeconds: photos[i].offsetSeconds,
         });
       }
 
-      // 3. Kick off transcription + report generation (takes a minute+)
       setSubmitStep("Generating your report — this takes a minute or two...");
       const finalizeRes = await fetch(`/api/jobs/${job.id}/finalize`, {
         method: "POST",
@@ -191,7 +216,6 @@ export default function WalkthroughRecorder() {
         }),
       });
 
-      // Even if processing failed, the job page shows status + retry
       router.push(`/jobs/${job.id}`);
       if (!finalizeRes.ok) return;
     } catch (err) {
@@ -227,42 +251,37 @@ export default function WalkthroughRecorder() {
 
   if (phase === "recording") {
     return (
-      <div className="flex flex-col items-center gap-8 px-4 py-12">
-        <div className="flex items-center gap-3">
-          <span className="h-3 w-3 animate-pulse rounded-full bg-red-500" />
-          <span className="font-mono text-4xl font-bold tabular-nums">
-            {formatTime(elapsed)}
-          </span>
+      <div className="mx-auto flex max-w-md flex-col gap-3 px-3 py-3">
+        {/* Live camera preview */}
+        <div className="relative w-full overflow-hidden rounded-2xl bg-navy aspect-[3/4]">
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="h-full w-full object-cover"
+          />
+          {flash && <div className="absolute inset-0 bg-white" />}
+
+          {/* timer */}
+          <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5 backdrop-blur">
+            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500" />
+            <span className="font-mono text-sm font-bold tabular-nums text-white">
+              {formatTime(elapsed)}
+            </span>
+          </div>
+
+          {/* photo count */}
+          {photos.length > 0 && (
+            <div className="absolute right-3 top-3 rounded-full bg-black/60 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur">
+              {photos.length} 📷
+            </div>
+          )}
         </div>
 
-        <p className="text-center text-sm text-white/60">
-          Walk and talk — describe what you&apos;re seeing.
-          <br />
-          Snap a photo whenever you&apos;re talking about something visible.
-        </p>
-
-        <button
-          onClick={handleAddPhotoClick}
-          className="flex w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-navy px-6 py-5 text-lg font-semibold ring-1 ring-white/10 transition hover:ring-brand"
-        >
-          📷 Snap photo
-          {photos.length > 0 && (
-            <span className="rounded-full bg-brand px-2.5 py-0.5 text-sm">
-              {photos.length}
-            </span>
-          )}
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={handlePhotoSelected}
-        />
-
+        {/* Photo bank — fills up as they shoot */}
         {photos.length > 0 && (
-          <div className="flex w-full max-w-xs gap-2 overflow-x-auto">
+          <div className="flex gap-2 overflow-x-auto pb-1">
             {photos.map((p) => (
               <div key={p.id} className="relative shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -271,7 +290,7 @@ export default function WalkthroughRecorder() {
                   alt={`Photo at ${formatTime(p.offsetSeconds)}`}
                   className="h-16 w-16 rounded-lg object-cover"
                 />
-                <span className="absolute bottom-0.5 right-0.5 rounded bg-black/70 px-1 font-mono text-[10px]">
+                <span className="absolute bottom-0.5 right-0.5 rounded bg-black/70 px-1 font-mono text-[10px] text-white">
                   {formatTime(p.offsetSeconds)}
                 </span>
               </div>
@@ -279,12 +298,26 @@ export default function WalkthroughRecorder() {
           </div>
         )}
 
-        <button
-          onClick={stopRecording}
-          className="rounded-xl bg-red-600 px-8 py-4 font-semibold text-white transition hover:bg-red-500"
-        >
-          ■ Stop walkthrough
-        </button>
+        {/* Shutter + Done */}
+        <div className="mt-1 flex items-center justify-between">
+          <div className="w-20" />
+          <button
+            onClick={snapPhoto}
+            aria-label="Take photo"
+            className="flex h-20 w-20 items-center justify-center rounded-full ring-4 ring-white/80 transition active:scale-95"
+          >
+            <span className="h-16 w-16 rounded-full bg-white transition active:bg-white/70" />
+          </button>
+          <button
+            onClick={stopRecording}
+            className="w-20 rounded-lg bg-red-600 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-red-500"
+          >
+            Done
+          </button>
+        </div>
+        <p className="text-center text-xs text-white/40">
+          Talk as you walk. Tap the shutter to snap what you&apos;re describing.
+        </p>
       </div>
     );
   }
@@ -323,12 +356,6 @@ export default function WalkthroughRecorder() {
         />
       </label>
 
-      {audioUrl && (
-        <audio controls src={audioUrl} className="w-full">
-          Your browser can&apos;t play this recording.
-        </audio>
-      )}
-
       {photos.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
           {photos.map((p) => (
@@ -339,7 +366,7 @@ export default function WalkthroughRecorder() {
                 alt={`Photo at ${formatTime(p.offsetSeconds)}`}
                 className="aspect-square w-full rounded-lg object-cover"
               />
-              <span className="absolute bottom-1 left-1 rounded bg-black/70 px-1 font-mono text-[10px]">
+              <span className="absolute bottom-1 left-1 rounded bg-black/70 px-1 font-mono text-[10px] text-white">
                 {formatTime(p.offsetSeconds)}
               </span>
               <button
