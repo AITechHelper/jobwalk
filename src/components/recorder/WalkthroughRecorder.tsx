@@ -1,5 +1,7 @@
 "use client";
 
+import { upload } from "@vercel/blob/client";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 type CapturedPhoto = {
@@ -9,7 +11,7 @@ type CapturedPhoto = {
   offsetSeconds: number;
 };
 
-type Phase = "idle" | "recording" | "review";
+type Phase = "idle" | "recording" | "review" | "submitting";
 
 function pickMimeType(): string {
   const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
@@ -23,7 +25,10 @@ function formatTime(totalSeconds: number): string {
 }
 
 export default function WalkthroughRecorder() {
+  const router = useRouter();
   const [phase, setPhase] = useState<Phase>("idle");
+  const [submitStep, setSubmitStep] = useState("");
+  const audioBlobRef = useRef<Blob | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -67,6 +72,7 @@ export default function WalkthroughRecorder() {
         const blob = new Blob(chunksRef.current, {
           type: recorder.mimeType || "audio/webm",
         });
+        audioBlobRef.current = blob;
         setAudioUrl(URL.createObjectURL(blob));
         stream.getTracks().forEach((t) => t.stop());
       };
@@ -125,11 +131,76 @@ export default function WalkthroughRecorder() {
   function discard() {
     photos.forEach((p) => URL.revokeObjectURL(p.previewUrl));
     if (audioUrl) URL.revokeObjectURL(audioUrl);
+    audioBlobRef.current = null;
     setPhotos([]);
     setAudioUrl(null);
     setTitle("");
     setElapsed(0);
     setPhase("idle");
+  }
+
+  async function generateReport() {
+    const audioBlob = audioBlobRef.current;
+    if (!audioBlob || !title.trim()) return;
+    setPhase("submitting");
+    setError(null);
+    try {
+      // 1. Create the job row
+      setSubmitStep("Creating job...");
+      const jobRes = await fetch("/api/jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: title.trim() }),
+      });
+      if (!jobRes.ok) throw new Error(`job create failed: ${jobRes.status}`);
+      const { job } = await jobRes.json();
+
+      // 2. Upload audio + photos directly to Blob storage
+      setSubmitStep("Uploading recording...");
+      const ext = audioBlob.type.includes("mp4") ? "mp4" : "webm";
+      const audioBlobResult = await upload(
+        `jobs/${job.id}/audio.${ext}`,
+        audioBlob,
+        { access: "public", handleUploadUrl: "/api/upload" },
+      );
+
+      const uploadedPhotos: { url: string; offsetSeconds: number }[] = [];
+      for (let i = 0; i < photos.length; i++) {
+        setSubmitStep(`Uploading photo ${i + 1} of ${photos.length}...`);
+        const p = photos[i];
+        const result = await upload(
+          `jobs/${job.id}/photo-${i}.jpg`,
+          p.file,
+          { access: "public", handleUploadUrl: "/api/upload" },
+        );
+        uploadedPhotos.push({
+          url: result.url,
+          offsetSeconds: p.offsetSeconds,
+        });
+      }
+
+      // 3. Kick off transcription + report generation (takes a minute+)
+      setSubmitStep("Generating your report — this takes a minute or two...");
+      const finalizeRes = await fetch(`/api/jobs/${job.id}/finalize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          audioUrl: audioBlobResult.url,
+          durationSeconds: duration,
+          photos: uploadedPhotos,
+        }),
+      });
+
+      // Even if processing failed, the job page shows status + retry
+      router.push(`/jobs/${job.id}`);
+      if (!finalizeRes.ok) return;
+    } catch (err) {
+      console.error(err);
+      setError(
+        "Something went wrong saving your walkthrough. Your recording is still here — try again.",
+      );
+      setPhase("review");
+    }
   }
 
   if (phase === "idle") {
@@ -218,6 +289,18 @@ export default function WalkthroughRecorder() {
     );
   }
 
+  if (phase === "submitting") {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 px-4 py-24 text-center">
+        <span className="h-10 w-10 animate-spin rounded-full border-4 border-white/10 border-t-brand" />
+        <p className="font-semibold">{submitStep}</p>
+        <p className="text-sm text-white/60">
+          Keep this screen open until it finishes.
+        </p>
+      </div>
+    );
+  }
+
   // review phase
   return (
     <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-8">
@@ -271,10 +354,7 @@ export default function WalkthroughRecorder() {
         </div>
       )}
 
-      <div className="rounded-lg border border-brand/40 bg-navy p-3 text-sm text-white/60">
-        Upload &amp; report generation land in the next build step — for now
-        this screen proves out the capture flow.
-      </div>
+      {error && <p className="text-sm text-red-400">{error}</p>}
 
       <div className="flex gap-3">
         <button
@@ -284,9 +364,10 @@ export default function WalkthroughRecorder() {
           Discard
         </button>
         <button
-          disabled
-          title="Coming in the next step"
-          className="flex-1 cursor-not-allowed rounded-lg bg-brand px-4 py-3 font-semibold text-white opacity-50"
+          onClick={generateReport}
+          disabled={!title.trim()}
+          title={!title.trim() ? "Name the job first" : undefined}
+          className="flex-1 rounded-lg bg-brand px-4 py-3 font-semibold text-white transition hover:bg-brand/85 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Generate report
         </button>

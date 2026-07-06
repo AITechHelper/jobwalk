@@ -1,0 +1,84 @@
+import { auth } from "@clerk/nextjs/server";
+import { and, eq } from "drizzle-orm";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { getDb } from "@/lib/db";
+import { jobs, photos } from "@/lib/db/schema";
+import { getContractorByClerkId } from "@/lib/contractor";
+import type { Report } from "@/lib/claude";
+import ReportView from "@/components/report/ReportView";
+import RetryProcessingButton from "@/components/report/RetryProcessingButton";
+import ShareLinkButton from "@/components/report/ShareLinkButton";
+
+export default async function JobDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { userId } = await auth();
+  if (!userId) redirect("/sign-in");
+  const contractor = await getContractorByClerkId(userId);
+  if (!contractor) redirect("/onboarding");
+
+  const { id } = await params;
+  const db = getDb();
+  const [job] = await db
+    .select()
+    .from(jobs)
+    .where(and(eq(jobs.id, id), eq(jobs.contractorId, contractor.id)));
+  if (!job) notFound();
+
+  if (job.status === "failed") {
+    return (
+      <div className="flex flex-col items-center gap-4 px-4 py-24 text-center">
+        <h1 className="text-xl font-semibold">{job.title}</h1>
+        <p className="text-sm text-white/60">
+          Something went wrong generating this report. Your recording and
+          photos are safe — try again.
+        </p>
+        <RetryProcessingButton jobId={job.id} />
+      </div>
+    );
+  }
+
+  if (job.status !== "ready" || !job.report) {
+    return (
+      <div className="flex flex-col items-center gap-3 px-4 py-24 text-center">
+        <h1 className="text-xl font-semibold">{job.title}</h1>
+        <p className="text-sm text-white/60">
+          {job.status === "processing"
+            ? "Generating your report — this usually takes a minute or two. Refresh to check."
+            : "This walkthrough hasn't been processed yet."}
+        </p>
+      </div>
+    );
+  }
+
+  const jobPhotos = await db
+    .select()
+    .from(photos)
+    .where(eq(photos.jobId, job.id));
+  const photoUrls = Object.fromEntries(
+    jobPhotos.map((p) => [p.id, p.blobUrl]),
+  );
+
+  return (
+    <div>
+      <div className="mx-auto flex max-w-2xl items-center justify-between px-4 pt-6">
+        <Link href="/jobs" className="text-sm text-white/60 hover:text-brand">
+          ← All jobs
+        </Link>
+        <ShareLinkButton shareToken={job.shareToken} />
+      </div>
+      <ReportView
+        title={job.title}
+        createdAt={job.createdAt}
+        businessName={contractor.businessName}
+        contractorName={contractor.name}
+        phone={contractor.phone}
+        report={job.report as Report}
+        photoUrls={photoUrls}
+      />
+    </div>
+  );
+}
