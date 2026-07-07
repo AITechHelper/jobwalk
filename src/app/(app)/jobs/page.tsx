@@ -5,15 +5,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { jobs } from "@/lib/db/schema";
 import { getContractorByClerkId } from "@/lib/contractor";
-import LocalDate from "@/components/LocalDate";
-
-const STATUS_LABELS: Record<string, { label: string; classes: string }> = {
-  recording: { label: "Draft", classes: "bg-white/10 text-white/60" },
-  uploading: { label: "Uploading", classes: "bg-white/10 text-white/60" },
-  processing: { label: "Processing", classes: "bg-brand/20 text-brand" },
-  ready: { label: "Ready", classes: "bg-brand/20 text-brand" },
-  failed: { label: "Failed", classes: "bg-red-500/20 text-red-400" },
-};
+import JobList from "@/components/JobList";
 
 export default async function JobsPage({
   searchParams,
@@ -72,32 +64,14 @@ export default async function JobsPage({
           )}
         </div>
       ) : (
-        <ul className="mt-6 flex flex-col gap-3">
-          {rows.map((job) => {
-            const status =
-              STATUS_LABELS[job.status] ?? STATUS_LABELS.recording;
-            return (
-              <li key={job.id}>
-                <Link
-                  href={`/jobs/${job.id}`}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-navy p-4 transition hover:border-brand"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold">{job.title}</p>
-                    <p className="mt-0.5 text-xs text-white/50">
-                      <LocalDate iso={job.createdAt.toISOString()} />
-                    </p>
-                  </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${status.classes}`}
-                  >
-                    {status.label}
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        <JobList
+          jobs={rows.map((job) => ({
+            id: job.id,
+            title: job.title,
+            status: job.status,
+            createdAt: job.createdAt.toISOString(),
+          }))}
+        />
       )}
     </div>
   );
