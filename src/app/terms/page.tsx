@@ -1,9 +1,12 @@
+import BackLink from "@/components/BackLink";
+
 export const metadata = { title: "Terms of Service — JobWalk" };
 
 export default function TermsPage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 text-white/80">
-      <h1 className="text-2xl font-bold text-white">Terms of Service</h1>
+      <BackLink />
+      <h1 className="mt-4 text-2xl font-bold text-white">Terms of Service</h1>
       <p className="mt-1 text-sm text-white/50">Last updated July 2026</p>
 
       <p className="mt-6 leading-relaxed">
@@ -67,10 +70,10 @@ export default function TermsPage() {
       <p className="mt-3 leading-relaxed">
         Questions about these terms:{" "}
         <a
-          href="mailto:aitechhelper@gmail.com"
+          href="mailto:aitechnologyhelper@gmail.com"
           className="text-brand hover:underline"
         >
-          aitechhelper@gmail.com
+          aitechnologyhelper@gmail.com
         </a>
         .
       </p>
