@@ -6,6 +6,8 @@ const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/share(.*)", // client-facing report links must work without an account
+  "/privacy",
+  "/terms",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

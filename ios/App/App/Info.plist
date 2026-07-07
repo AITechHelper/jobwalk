@@ -55,5 +55,7 @@
 	<string>JobWalk lets you add photos from your library to a walkthrough report.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>JobWalk saves report photos to your library.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

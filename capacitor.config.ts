@@ -23,6 +23,11 @@ const config: CapacitorConfig = {
       "clerk.aitechhelper.com",
       "accounts.aitechhelper.com",
       "challenges.cloudflare.com",
+      // Social sign-in OAuth redirects (Google today; Apple once Sign in
+      // with Apple is enabled in the Clerk Dashboard) — without these the
+      // WebView blocks the redirect and bounces the user out to Safari.
+      "accounts.google.com",
+      "appleid.apple.com",
     ],
   },
   ios: {

@@ -1,7 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
-import { UserButton } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import BottomNav from "@/components/BottomNav";
+import AccountMenu from "@/components/AccountMenu";
 
 export default async function AppLayout({
   children,
@@ -18,7 +18,7 @@ export default async function AppLayout({
         <span className="text-lg font-bold tracking-tight">
           Job<span className="text-brand">Walk</span>
         </span>
-        <UserButton />
+        <AccountMenu />
       </header>
 
       <main className="flex-1 pb-20">{children}</main>

@@ -1,0 +1,92 @@
+export const metadata = { title: "Privacy Policy — JobWalk" };
+
+export default function PrivacyPage() {
+  return (
+    <main className="mx-auto max-w-2xl px-4 py-10 text-white/80">
+      <h1 className="text-2xl font-bold text-white">Privacy Policy</h1>
+      <p className="mt-1 text-sm text-white/50">Last updated July 2026</p>
+
+      <p className="mt-6 leading-relaxed">
+        JobWalk is built by AI Tech Helper LLC (&quot;we,&quot; &quot;us&quot;),
+        Tulsa, OK. This policy explains what we collect when you use the
+        JobWalk app and why.
+      </p>
+
+      <h2 className="mt-8 text-lg font-semibold text-white">
+        Information we collect
+      </h2>
+      <ul className="mt-3 flex list-disc flex-col gap-2 pl-5 leading-relaxed">
+        <li>
+          <strong>Account info:</strong> name, email, phone number, business
+          name, and trade type, provided when you sign up and complete
+          onboarding.
+        </li>
+        <li>
+          <strong>Walkthrough content:</strong> audio recordings and photos
+          you capture during a job walkthrough, and the transcript and report
+          generated from them.
+        </li>
+        <li>
+          <strong>Usage data:</strong> basic technical data (device, app
+          version) needed to keep the app working reliably.
+        </li>
+      </ul>
+
+      <h2 className="mt-8 text-lg font-semibold text-white">
+        How we use it
+      </h2>
+      <ul className="mt-3 flex list-disc flex-col gap-2 pl-5 leading-relaxed">
+        <li>
+          Audio is transcribed (via OpenAI Whisper) and, along with your
+          photos, sent to Anthropic&apos;s Claude to generate your written
+          report.
+        </li>
+        <li>
+          Your account info and reports are stored so you can view, edit, and
+          manage your walkthroughs.
+        </li>
+        <li>
+          A report is only visible to others if you generate and send its
+          share link yourself.
+        </li>
+        <li>
+          We do not sell your personal information. We do not use your
+          walkthrough content to train AI models.
+        </li>
+      </ul>
+
+      <h2 className="mt-8 text-lg font-semibold text-white">
+        Where it&apos;s stored
+      </h2>
+      <p className="mt-3 leading-relaxed">
+        Account and report data is stored in a hosted Postgres database
+        (Neon). Photos and audio recordings are stored via Vercel Blob
+        storage. Authentication is handled by Clerk. All of these providers
+        process data on our behalf under their own security and privacy
+        commitments.
+      </p>
+
+      <h2 className="mt-8 text-lg font-semibold text-white">Your choices</h2>
+      <ul className="mt-3 flex list-disc flex-col gap-2 pl-5 leading-relaxed">
+        <li>You can edit or delete any walkthrough and its report at any time.</li>
+        <li>
+          You can delete your account from within the app (tap your profile
+          icon → Delete account). This permanently removes your account,
+          walkthroughs, reports, photos, and audio.
+        </li>
+      </ul>
+
+      <h2 className="mt-8 text-lg font-semibold text-white">Contact</h2>
+      <p className="mt-3 leading-relaxed">
+        Questions about this policy or your data:{" "}
+        <a
+          href="mailto:aitechhelper@gmail.com"
+          className="text-brand hover:underline"
+        >
+          aitechhelper@gmail.com
+        </a>
+        .
+      </p>
+    </main>
+  );
+}

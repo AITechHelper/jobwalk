@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function AuthLayout({
   children,
 }: Readonly<{
@@ -14,6 +16,17 @@ export default function AuthLayout({
         </p>
       </div>
       {children}
+      <p className="text-center text-xs text-white/40">
+        By continuing you agree to our{" "}
+        <Link href="/terms" className="underline hover:text-white/60">
+          Terms
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="underline hover:text-white/60">
+          Privacy Policy
+        </Link>
+        .
+      </p>
     </div>
   );
 }
