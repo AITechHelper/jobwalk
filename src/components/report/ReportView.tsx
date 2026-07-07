@@ -1,4 +1,5 @@
 import type { Report } from "@/lib/claude";
+import LocalDate from "@/components/LocalDate";
 
 type Props = {
   title: string;
@@ -19,65 +20,79 @@ export default function ReportView({
   report,
   photoUrls,
 }: Props) {
-  const date = createdAt.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
   return (
-    <article className="mx-auto max-w-2xl px-4 py-8">
-      <header className="border-b border-white/10 pb-6">
-        <p className="text-sm font-semibold uppercase tracking-wide text-brand">
-          {businessName}
-        </p>
-        <h1 className="mt-1 text-2xl font-bold">{title}</h1>
-        <p className="mt-1 text-sm text-white/60">
-          Walkthrough report · {date} · {contractorName} · {phone}
-        </p>
-      </header>
+    <div className="mx-auto max-w-3xl px-4 py-8 print:max-w-none print:p-0">
+      {/* A light "paper" document that reads professionally on screen and
+          exports cleanly to PDF via the browser print pipeline. */}
+      <article className="report-sheet overflow-hidden rounded-2xl bg-white text-neutral-800 shadow-xl ring-1 ring-black/5 print:rounded-none print:shadow-none print:ring-0">
+        <header className="bg-brand px-8 py-7 text-white print:px-10">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
+            {businessName}
+          </p>
+          <h1 className="mt-2 text-3xl font-bold leading-tight">{title}</h1>
+          <p className="mt-3 text-sm text-white/90">
+            Walkthrough Report ·{" "}
+            <LocalDate iso={createdAt.toISOString()} format="long" />
+          </p>
+          <p className="text-sm text-white/90">
+            {contractorName} · {phone}
+          </p>
+        </header>
 
-      <section className="mt-6">
-        <h2 className="text-lg font-semibold">Summary</h2>
-        <p className="mt-2 leading-relaxed text-white/80">{report.summary}</p>
-      </section>
+        <div className="px-8 py-8 print:px-10">
+          <section className="break-inside-avoid">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-brand">
+              Summary
+            </h2>
+            <p className="mt-2 leading-relaxed text-neutral-700">
+              {report.summary}
+            </p>
+          </section>
 
-      {report.areas.map((area, i) => (
-        <section key={i} className="mt-8">
-          <h2 className="text-lg font-semibold">{area.title}</h2>
-          <p className="mt-2 leading-relaxed text-white/80">{area.narrative}</p>
-          {area.photoIds.length > 0 && (
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              {area.photoIds.map((photoId) =>
-                photoUrls[photoId] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={photoId}
-                    src={photoUrls[photoId]}
-                    alt={area.title}
-                    className="w-full rounded-lg border border-white/10 object-cover"
-                  />
-                ) : null,
+          {report.areas.map((area, i) => (
+            <section key={i} className="mt-9">
+              <h2 className="break-after-avoid border-b border-neutral-200 pb-2 text-xl font-semibold text-neutral-900">
+                {area.title}
+              </h2>
+              <p className="mt-3 leading-relaxed text-neutral-700">
+                {area.narrative}
+              </p>
+              {area.photoIds.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  {area.photoIds.map((photoId) =>
+                    photoUrls[photoId] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={photoId}
+                        src={photoUrls[photoId]}
+                        alt={area.title}
+                        className="w-full break-inside-avoid rounded-lg border border-neutral-200 object-cover"
+                      />
+                    ) : null,
+                  )}
+                </div>
               )}
-            </div>
+            </section>
+          ))}
+
+          {report.recommendations.length > 0 && (
+            <section className="mt-9 break-inside-avoid rounded-xl border border-brand/30 bg-brand/5 p-5">
+              <h2 className="text-sm font-bold uppercase tracking-[0.15em] text-brand">
+                Recommended next steps
+              </h2>
+              <ul className="mt-3 flex list-disc flex-col gap-2 pl-5 text-neutral-700 marker:text-brand">
+                {report.recommendations.map((rec, i) => (
+                  <li key={i}>{rec}</li>
+                ))}
+              </ul>
+            </section>
           )}
-        </section>
-      ))}
+        </div>
 
-      {report.recommendations.length > 0 && (
-        <section className="mt-8 rounded-xl border border-brand/40 bg-navy p-5">
-          <h2 className="text-lg font-semibold">Recommended next steps</h2>
-          <ul className="mt-3 flex list-disc flex-col gap-2 pl-5 text-white/80">
-            {report.recommendations.map((rec, i) => (
-              <li key={i}>{rec}</li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <footer className="mt-10 border-t border-white/10 pt-4 text-center text-xs text-white/40">
-        Prepared by {businessName} · {phone}
-      </footer>
-    </article>
+        <footer className="border-t border-neutral-200 px-8 py-5 text-center text-xs text-neutral-400 print:px-10">
+          Prepared by {businessName} · {phone}
+        </footer>
+      </article>
+    </div>
   );
 }

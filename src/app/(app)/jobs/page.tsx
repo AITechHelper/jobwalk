@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { jobs } from "@/lib/db/schema";
 import { getContractorByClerkId } from "@/lib/contractor";
+import LocalDate from "@/components/LocalDate";
 
 const STATUS_LABELS: Record<string, { label: string; classes: string }> = {
   recording: { label: "Draft", classes: "bg-white/10 text-white/60" },
@@ -84,11 +85,7 @@ export default async function JobsPage({
                   <div className="min-w-0">
                     <p className="truncate font-semibold">{job.title}</p>
                     <p className="mt-0.5 text-xs text-white/50">
-                      {job.createdAt.toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
+                      <LocalDate iso={job.createdAt.toISOString()} />
                     </p>
                   </div>
                   <span

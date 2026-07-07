@@ -14,7 +14,7 @@ export default async function AppLayout({
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="flex items-center justify-between border-b border-white/10 bg-navy px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)]">
+      <header className="flex items-center justify-between border-b border-white/10 bg-navy px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] print:hidden">
         <span className="text-lg font-bold tracking-tight">
           Job<span className="text-brand">Walk</span>
         </span>

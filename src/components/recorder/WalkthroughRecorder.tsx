@@ -340,28 +340,33 @@ export default function WalkthroughRecorder() {
 
   // review phase
   return (
-    <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-8">
-      <div>
-        <h1 className="text-2xl font-bold">Walkthrough captured</h1>
+    <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-10">
+      <div className="text-center">
+        <span className="text-3xl">✅</span>
+        <h1 className="mt-2 text-2xl font-bold">Name this walkthrough</h1>
         <p className="mt-1 text-sm text-white/60">
-          {formatTime(duration)} of audio · {photos.length} photo
-          {photos.length === 1 ? "" : "s"}
+          Give it a name, then generate your report.
         </p>
       </div>
 
-      <label className="flex flex-col gap-1.5 text-sm font-medium">
-        Job name
+      <div>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Smith residence — roof inspection"
-          className="w-full rounded-lg border border-white/10 bg-navy px-4 py-3 text-foreground placeholder-white/40 focus:border-brand focus:outline-none"
+          autoFocus
+          enterKeyHint="done"
+          placeholder="e.g. Smith residence — roof inspection"
+          className="w-full rounded-xl border-2 border-brand/50 bg-navy px-4 py-4 text-lg text-foreground placeholder-white/40 focus:border-brand focus:outline-none"
         />
-      </label>
+        <p className="mt-2 text-center text-xs text-white/40">
+          {formatTime(duration)} recorded · {photos.length} photo
+          {photos.length === 1 ? "" : "s"} captured
+        </p>
+      </div>
 
       {photos.length > 0 && (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-4 gap-2 opacity-80">
           {photos.map((p) => (
             <div key={p.id} className="relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}

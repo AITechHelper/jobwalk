@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { Report } from "@/lib/claude";
 import ReportView from "./ReportView";
 import ShareLinkButton from "./ShareLinkButton";
+import SavePdfButton from "./SavePdfButton";
 
 type Props = {
   jobId: string;
@@ -242,7 +243,7 @@ export default function OwnerReport({
 
   return (
     <div>
-      <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-end gap-2 px-4 pt-6">
+      <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-end gap-2 px-4 pt-6 print:hidden">
         <button
           onClick={() => setConfirmDelete(true)}
           aria-label="Delete report"
@@ -256,6 +257,7 @@ export default function OwnerReport({
         >
           Edit
         </button>
+        <SavePdfButton />
         <ShareLinkButton shareToken={shareToken} />
       </div>
 
