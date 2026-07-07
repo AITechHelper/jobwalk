@@ -3,6 +3,7 @@
 import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import Spinner from "@/components/ui/Spinner";
 
 type CapturedPhoto = {
   id: string;
@@ -33,6 +34,7 @@ export default function WalkthroughRecorder() {
   const [title, setTitle] = useState("");
   const [duration, setDuration] = useState(0);
   const [flash, setFlash] = useState(false);
+  const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const audioBlobRef = useRef<Blob | null>(null);
@@ -62,6 +64,7 @@ export default function WalkthroughRecorder() {
 
   async function startRecording() {
     setError(null);
+    setStarting(true);
     try {
       // One stream for both: audio feeds the recorder, video feeds the live
       // preview + instant photo capture.
@@ -104,6 +107,8 @@ export default function WalkthroughRecorder() {
       setError(
         "JobWalk needs camera and microphone access to record a walkthrough. Allow both in your settings and try again.",
       );
+    } finally {
+      setStarting(false);
     }
   }
 
@@ -243,11 +248,19 @@ export default function WalkthroughRecorder() {
         </div>
         <button
           onClick={startRecording}
-          className="flex h-24 w-24 items-center justify-center rounded-full bg-brand text-white shadow-lg transition hover:bg-brand/85"
+          disabled={starting}
+          aria-label="Start recording"
+          className="flex h-24 w-24 items-center justify-center rounded-full bg-brand text-white shadow-lg transition active:scale-95 hover:bg-brand/85 disabled:opacity-70"
         >
-          <span className="h-8 w-8 rounded-full bg-white" />
+          {starting ? (
+            <Spinner className="h-9 w-9 border-[3px] text-white" />
+          ) : (
+            <span className="h-8 w-8 rounded-full bg-white" />
+          )}
         </button>
-        <p className="text-xs text-white/40">Tap to start recording</p>
+        <p className="text-xs text-white/40">
+          {starting ? "Starting camera…" : "Tap to start recording"}
+        </p>
         {error && <p className="max-w-sm text-sm text-red-400">{error}</p>}
       </div>
     );
@@ -256,8 +269,10 @@ export default function WalkthroughRecorder() {
   if (phase === "recording") {
     return (
       <div className="mx-auto flex max-w-md flex-col gap-3 px-3 py-3">
-        {/* Live camera preview */}
-        <div className="relative w-full overflow-hidden rounded-2xl bg-navy aspect-[3/4]">
+        {/* Fixed-aspect preview + photos overlaid inside it (below) means the
+            layout height never grows as photos are taken, so the controls can't
+            be pushed under the nav. */}
+        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-navy">
           <video
             ref={videoRef}
             autoPlay
@@ -281,29 +296,30 @@ export default function WalkthroughRecorder() {
               {photos.length} 📷
             </div>
           )}
+
+          {/* Photo bank overlaid at the bottom of the preview — it never adds
+              layout height, so the shutter can't be pushed off screen. */}
+          {photos.length > 0 && (
+            <div className="absolute inset-x-0 bottom-0 flex gap-2 overflow-x-auto bg-gradient-to-t from-black/70 to-transparent p-2">
+              {photos.map((p) => (
+                <div key={p.id} className="relative shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={p.previewUrl}
+                    alt={`Photo at ${formatTime(p.offsetSeconds)}`}
+                    className="h-14 w-14 rounded-lg border border-white/20 object-cover"
+                  />
+                  <span className="absolute bottom-0.5 right-0.5 rounded bg-black/70 px-1 font-mono text-[10px] text-white">
+                    {formatTime(p.offsetSeconds)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Photo bank — fills up as they shoot */}
-        {photos.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {photos.map((p) => (
-              <div key={p.id} className="relative shrink-0">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={p.previewUrl}
-                  alt={`Photo at ${formatTime(p.offsetSeconds)}`}
-                  className="h-16 w-16 rounded-lg object-cover"
-                />
-                <span className="absolute bottom-0.5 right-0.5 rounded bg-black/70 px-1 font-mono text-[10px] text-white">
-                  {formatTime(p.offsetSeconds)}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Shutter + Done */}
-        <div className="mt-1 flex items-center justify-between">
+        {/* Shutter + Done — pinned in a fixed-height row */}
+        <div className="flex shrink-0 items-center justify-between">
           <div className="w-20" />
           <button
             onClick={snapPhoto}
@@ -319,7 +335,7 @@ export default function WalkthroughRecorder() {
             Done
           </button>
         </div>
-        <p className="text-center text-xs text-white/40">
+        <p className="shrink-0 text-center text-xs text-white/40">
           Talk as you walk. Tap the shutter to snap what you&apos;re describing.
         </p>
       </div>

@@ -2,10 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { Report } from "@/lib/claude";
+import { reportNotes, type Report } from "@/lib/claude";
 import ReportView from "./ReportView";
 import ShareLinkButton from "./ShareLinkButton";
 import SavePdfButton from "./SavePdfButton";
+import Spinner from "@/components/ui/Spinner";
 
 type Props = {
   jobId: string;
@@ -40,16 +41,16 @@ export default function OwnerReport({
   // Draft state — only initialized/reset when entering edit mode.
   const [draftTitle, setDraftTitle] = useState(title);
   const [draftSummary, setDraftSummary] = useState(report.summary);
-  const [draftAreas, setDraftAreas] = useState(
-    report.areas.map((a) => ({ title: a.title, narrative: a.narrative })),
+  const [draftNotes, setDraftNotes] = useState(() =>
+    reportNotes(report).map((n) => ({ text: n.text, photoIds: n.photoIds })),
   );
   const [draftRecs, setDraftRecs] = useState<string[]>(report.recommendations);
 
   function startEditing() {
     setDraftTitle(title);
     setDraftSummary(report.summary);
-    setDraftAreas(
-      report.areas.map((a) => ({ title: a.title, narrative: a.narrative })),
+    setDraftNotes(
+      reportNotes(report).map((n) => ({ text: n.text, photoIds: n.photoIds })),
     );
     setDraftRecs(report.recommendations);
     setError(null);
@@ -71,9 +72,9 @@ export default function OwnerReport({
           title: draftTitle.trim(),
           report: {
             summary: draftSummary,
-            areas: draftAreas.map((a) => ({
-              title: a.title,
-              narrative: a.narrative,
+            notes: draftNotes.map((n) => ({
+              text: n.text,
+              photoIds: n.photoIds,
             })),
             recommendations: draftRecs
               .map((r) => r.trim())
@@ -123,8 +124,9 @@ export default function OwnerReport({
           <button
             onClick={save}
             disabled={saving}
-            className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand/85 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand/85 disabled:opacity-50"
           >
+            {saving && <Spinner />}
             {saving ? "Saving..." : "Save"}
           </button>
         </div>
@@ -154,51 +156,47 @@ export default function OwnerReport({
           />
         </label>
 
-        {draftAreas.map((area, i) => (
+        <div className="mt-6 text-xs font-semibold uppercase tracking-wide text-white/50">
+          Notes
+        </div>
+        {draftNotes.map((note, i) => (
           <div
             key={i}
-            className="mt-5 rounded-xl border border-white/10 bg-navy/50 p-4"
+            className="mt-3 flex gap-3 rounded-xl border border-white/10 bg-navy/50 p-4"
           >
-            <input
-              value={area.title}
-              onChange={(e) =>
-                setDraftAreas((prev) =>
-                  prev.map((a, j) =>
-                    j === i ? { ...a, title: e.target.value } : a,
-                  ),
-                )
-              }
-              placeholder="Section heading"
-              className={`${inputClasses} font-semibold`}
-            />
-            <textarea
-              value={area.narrative}
-              onChange={(e) =>
-                setDraftAreas((prev) =>
-                  prev.map((a, j) =>
-                    j === i ? { ...a, narrative: e.target.value } : a,
-                  ),
-                )
-              }
-              rows={4}
-              placeholder="What was observed here"
-              className={`mt-2 ${inputClasses}`}
-            />
-            {report.areas[i]?.photoIds.length > 0 && (
-              <div className="mt-3 grid grid-cols-4 gap-2">
-                {report.areas[i].photoIds.map((photoId) =>
-                  photoUrls[photoId] ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      key={photoId}
-                      src={photoUrls[photoId]}
-                      alt=""
-                      className="aspect-square w-full rounded-md border border-white/10 object-cover"
-                    />
-                  ) : null,
-                )}
-              </div>
-            )}
+            <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/15 text-xs font-bold text-brand">
+              {i + 1}
+            </span>
+            <div className="min-w-0 flex-1">
+              <textarea
+                value={note.text}
+                onChange={(e) =>
+                  setDraftNotes((prev) =>
+                    prev.map((n, j) =>
+                      j === i ? { ...n, text: e.target.value } : n,
+                    ),
+                  )
+                }
+                rows={3}
+                placeholder="What was observed"
+                className={inputClasses}
+              />
+              {note.photoIds.length > 0 && (
+                <div className="mt-3 grid grid-cols-4 gap-2">
+                  {note.photoIds.map((photoId) =>
+                    photoUrls[photoId] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={photoId}
+                        src={photoUrls[photoId]}
+                        alt=""
+                        className="aspect-square w-full rounded-md border border-white/10 object-cover"
+                      />
+                    ) : null,
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         ))}
 
@@ -296,8 +294,9 @@ export default function OwnerReport({
               <button
                 onClick={remove}
                 disabled={deleting}
-                className="flex-1 rounded-lg bg-red-500 px-4 py-3 font-semibold text-white transition hover:bg-red-500/85 disabled:opacity-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-500 px-4 py-3 font-semibold text-white transition hover:bg-red-500/85 disabled:opacity-50"
               >
+                {deleting && <Spinner />}
                 {deleting ? "Deleting..." : "Delete"}
               </button>
             </div>

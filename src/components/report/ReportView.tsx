@@ -1,4 +1,4 @@
-import type { Report } from "@/lib/claude";
+import { reportNotes, type Report } from "@/lib/claude";
 import LocalDate from "@/components/LocalDate";
 
 type Props = {
@@ -20,6 +20,8 @@ export default function ReportView({
   report,
   photoUrls,
 }: Props) {
+  const notes = reportNotes(report);
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 print:max-w-none print:p-0">
       {/* A light "paper" document that reads professionally on screen and
@@ -49,31 +51,43 @@ export default function ReportView({
             </p>
           </section>
 
-          {report.areas.map((area, i) => (
-            <section key={i} className="mt-9">
-              <h2 className="break-after-avoid border-b border-neutral-200 pb-2 text-xl font-semibold text-neutral-900">
-                {area.title}
-              </h2>
-              <p className="mt-3 leading-relaxed text-neutral-700">
-                {area.narrative}
-              </p>
-              {area.photoIds.length > 0 && (
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  {area.photoIds.map((photoId) =>
-                    photoUrls[photoId] ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        key={photoId}
-                        src={photoUrls[photoId]}
-                        alt={area.title}
-                        className="w-full break-inside-avoid rounded-lg border border-neutral-200 object-cover"
-                      />
-                    ) : null,
-                  )}
-                </div>
-              )}
-            </section>
-          ))}
+          <section className="mt-9">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-brand">
+              Notes
+            </h2>
+            <ol className="mt-4 flex flex-col">
+              {notes.map((note, i) => (
+                <li
+                  key={i}
+                  className="flex gap-4 break-inside-avoid border-t border-neutral-200 py-5 first:border-0 first:pt-0"
+                >
+                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand/10 text-sm font-bold text-brand">
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="leading-relaxed text-neutral-800">
+                      {note.text}
+                    </p>
+                    {note.photoIds.length > 0 && (
+                      <div className="mt-3 flex flex-col gap-3">
+                        {note.photoIds.map((photoId) =>
+                          photoUrls[photoId] ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              key={photoId}
+                              src={photoUrls[photoId]}
+                              alt={`Note ${i + 1}`}
+                              className="w-full break-inside-avoid rounded-lg border border-neutral-200"
+                            />
+                          ) : null,
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
 
           {report.recommendations.length > 0 && (
             <section className="mt-9 break-inside-avoid rounded-xl border border-brand/30 bg-brand/5 p-5">

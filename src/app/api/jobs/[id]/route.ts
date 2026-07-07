@@ -8,20 +8,20 @@ import { getContractorByClerkId } from "@/lib/contractor";
 import type { Report } from "@/lib/claude";
 
 // Coerce a client-supplied report into the stored shape, dropping anything
-// unexpected. Editing only touches text — photoIds are preserved as-is so the
-// contractor can't accidentally detach photos while fixing a sentence.
-function sanitizeReport(input: unknown, current: Report): Report | null {
+// unexpected. Editing only touches text — photoIds are carried through as
+// strings (the editor never lets the user change them) so photos stay attached.
+function sanitizeReport(input: unknown): Report | null {
   if (typeof input !== "object" || input === null) return null;
   const r = input as Record<string, unknown>;
-  if (typeof r.summary !== "string" || !Array.isArray(r.areas)) return null;
+  if (typeof r.summary !== "string" || !Array.isArray(r.notes)) return null;
 
-  const areas = r.areas.map((a, i) => {
-    const area = (a ?? {}) as Record<string, unknown>;
+  const notes = r.notes.map((n) => {
+    const note = (n ?? {}) as Record<string, unknown>;
     return {
-      title: typeof area.title === "string" ? area.title : "",
-      narrative: typeof area.narrative === "string" ? area.narrative : "",
-      // Keep the original photo assignments; the editor never changes them.
-      photoIds: current.areas[i]?.photoIds ?? [],
+      text: typeof note.text === "string" ? note.text : "",
+      photoIds: Array.isArray(note.photoIds)
+        ? note.photoIds.filter((x): x is string => typeof x === "string")
+        : [],
     };
   });
 
@@ -29,7 +29,7 @@ function sanitizeReport(input: unknown, current: Report): Report | null {
     ? r.recommendations.filter((x): x is string => typeof x === "string")
     : [];
 
-  return { summary: r.summary, areas, recommendations };
+  return { summary: r.summary, notes, recommendations };
 }
 
 async function loadOwnedJob(id: string, clerkUserId: string) {
@@ -71,7 +71,7 @@ export async function PATCH(
   }
 
   if (body.report !== undefined) {
-    const cleaned = sanitizeReport(body.report, job.report as Report);
+    const cleaned = sanitizeReport(body.report);
     if (!cleaned) {
       return NextResponse.json({ error: "invalid report" }, { status: 400 });
     }

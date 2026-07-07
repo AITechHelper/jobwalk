@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import LocalDate from "@/components/LocalDate";
+import Spinner from "@/components/ui/Spinner";
 
 export type JobListItem = {
   id: string;
@@ -102,7 +103,7 @@ export default function JobList({ jobs }: { jobs: JobListItem[] }) {
               className="absolute inset-y-0 right-0 flex items-center justify-center bg-red-600 px-5 text-sm font-semibold text-white"
               style={{ width: REVEAL + 16 }}
             >
-              {deletingId === job.id ? "…" : "Delete"}
+              {deletingId === job.id ? <Spinner /> : "Delete"}
             </button>
 
             {/* Foreground card slides to reveal it */}

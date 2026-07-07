@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Spinner from "@/components/ui/Spinner";
 
 export default function RetryProcessingButton({ jobId }: { jobId: string }) {
   const router = useRouter();
@@ -28,8 +29,9 @@ export default function RetryProcessingButton({ jobId }: { jobId: string }) {
       <button
         onClick={retry}
         disabled={busy}
-        className="rounded-lg bg-brand px-6 py-3 font-semibold text-white transition hover:bg-brand/85 disabled:opacity-50"
+        className="flex items-center justify-center gap-2 rounded-lg bg-brand px-6 py-3 font-semibold text-white transition hover:bg-brand/85 disabled:opacity-50"
       >
+        {busy && <Spinner />}
         {busy ? "Generating report..." : "Try again"}
       </button>
       {error && <p className="text-sm text-red-400">{error}</p>}

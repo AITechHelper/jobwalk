@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Spinner from "@/components/ui/Spinner";
 
 export default function DeleteJobButton({ jobId }: { jobId: string }) {
   const router = useRouter();
@@ -48,8 +49,9 @@ export default function DeleteJobButton({ jobId }: { jobId: string }) {
         <button
           onClick={remove}
           disabled={deleting}
-          className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500/85 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500/85 disabled:opacity-50"
         >
+          {deleting && <Spinner />}
           {deleting ? "Deleting..." : "Delete"}
         </button>
       </div>
