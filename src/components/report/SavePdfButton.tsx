@@ -1,16 +1,24 @@
 "use client";
 
+import { useState } from "react";
 import { Capacitor } from "@capacitor/core";
-import { Browser } from "@capacitor/browser";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
+import Spinner from "@/components/ui/Spinner";
 
-// Uses the browser's print pipeline (Print → "Save as PDF" / "Save to Files")
-// so there's no server-side PDF dependency. The report is styled as a light
-// sheet with @media print rules, so what prints is a clean branded document.
-//
-// window.print() is a no-op inside Capacitor's WKWebView — there's no print
-// UI to trigger. In the native app, open the public share link in the system
-// browser instead, where print actually works; AutoPrint on that page
-// triggers it automatically so it's still a single tap.
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+// Generates a real PDF server-side and hands it directly to the platform's
+// native mechanism for saving/sharing a file. window.print() is unreliable on
+// iOS (relies on AirPrint + a hidden pinch-to-expand gesture, and doesn't
+// work at all in the Simulator), so this avoids print entirely.
 export default function SavePdfButton({
   shareToken,
   className = "",
@@ -18,25 +26,53 @@ export default function SavePdfButton({
   shareToken: string;
   className?: string;
 }) {
+  const [saving, setSaving] = useState(false);
+
   async function handleClick() {
-    if (Capacitor.isNativePlatform()) {
-      await Browser.open({
-        url: `${window.location.origin}/share/${shareToken}?print=1`,
-      });
-      return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/share/${shareToken}/pdf`);
+      if (!res.ok) throw new Error(`pdf fetch failed: ${res.status}`);
+      const blob = await res.blob();
+      const filename =
+        res.headers
+          .get("Content-Disposition")
+          ?.match(/filename="(.+)"/)?.[1] ?? "report.pdf";
+
+      if (Capacitor.isNativePlatform()) {
+        const base64 = await blobToBase64(blob);
+        const { uri } = await Filesystem.writeFile({
+          path: filename,
+          data: base64,
+          directory: Directory.Cache,
+        });
+        await Share.share({ title: filename, url: uri });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      console.error("[SavePdfButton] failed:", err);
+    } finally {
+      setSaving(false);
     }
-    window.print();
   }
 
   return (
     <button
       onClick={handleClick}
+      disabled={saving}
       className={
         className ||
-        "rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-brand hover:text-white"
+        "flex items-center gap-2 rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-brand hover:text-white disabled:opacity-60"
       }
     >
-      Save as PDF
+      {saving && <Spinner />}
+      {saving ? "Preparing..." : "Save as PDF"}
     </button>
   );
 }

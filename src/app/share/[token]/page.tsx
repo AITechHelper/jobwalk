@@ -5,18 +5,14 @@ import { contractors, jobs, photos } from "@/lib/db/schema";
 import type { Report } from "@/lib/claude";
 import ReportView from "@/components/report/ReportView";
 import SavePdfButton from "@/components/report/SavePdfButton";
-import AutoPrint from "@/components/report/AutoPrint";
 
 // Public, unauthenticated report page — the link contractors send clients.
 export default async function SharedReportPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ print?: string }>;
 }) {
   const { token } = await params;
-  const { print } = await searchParams;
   const db = getDb();
 
   const [row] = await db
@@ -37,7 +33,6 @@ export default async function SharedReportPage({
 
   return (
     <main className="min-h-screen bg-background">
-      <AutoPrint enabled={print === "1"} />
       <div className="mx-auto flex max-w-3xl justify-end px-4 pt-6 print:hidden">
         <SavePdfButton shareToken={token} />
       </div>
