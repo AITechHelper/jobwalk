@@ -28,8 +28,12 @@ textarea {
   font-size: 16px;
 }
 
-/* Disable the iOS tap-to-zoom / text auto-sizing quirks in the WebView. */
+/* Disable the iOS tap-to-zoom / text auto-sizing quirks in the WebView.
+   The background must be set here (not just on body) so the area behind the
+   status bar and any keyboard-focus overscroll reveal stays black instead of
+   falling back to the WebView's default white. */
 html {
+  background: var(--background);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }

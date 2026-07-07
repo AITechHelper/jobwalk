@@ -6,9 +6,9 @@ import { getDb } from "@/lib/db";
 import { jobs, photos } from "@/lib/db/schema";
 import { getContractorByClerkId } from "@/lib/contractor";
 import type { Report } from "@/lib/claude";
-import ReportView from "@/components/report/ReportView";
+import OwnerReport from "@/components/report/OwnerReport";
 import RetryProcessingButton from "@/components/report/RetryProcessingButton";
-import ShareLinkButton from "@/components/report/ShareLinkButton";
+import DeleteJobButton from "@/components/report/DeleteJobButton";
 
 export default async function JobDetailPage({
   params,
@@ -37,6 +37,7 @@ export default async function JobDetailPage({
           photos are safe — try again.
         </p>
         <RetryProcessingButton jobId={job.id} />
+        <DeleteJobButton jobId={job.id} />
       </div>
     );
   }
@@ -50,6 +51,7 @@ export default async function JobDetailPage({
             ? "Generating your report — this usually takes a minute or two. Refresh to check."
             : "This walkthrough hasn't been processed yet."}
         </p>
+        <DeleteJobButton jobId={job.id} />
       </div>
     );
   }
@@ -64,13 +66,14 @@ export default async function JobDetailPage({
 
   return (
     <div>
-      <div className="mx-auto flex max-w-2xl items-center justify-between px-4 pt-6">
+      <div className="mx-auto max-w-2xl px-4 pt-6">
         <Link href="/jobs" className="text-sm text-white/60 hover:text-brand">
           ← All jobs
         </Link>
-        <ShareLinkButton shareToken={job.shareToken} />
       </div>
-      <ReportView
+      <OwnerReport
+        jobId={job.id}
+        shareToken={job.shareToken}
         title={job.title}
         createdAt={job.createdAt}
         businessName={contractor.businessName}
