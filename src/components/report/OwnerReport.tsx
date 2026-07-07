@@ -255,7 +255,7 @@ export default function OwnerReport({
         >
           Edit
         </button>
-        <SavePdfButton />
+        <SavePdfButton shareToken={shareToken} />
         <ShareLinkButton shareToken={shareToken} />
       </div>
 

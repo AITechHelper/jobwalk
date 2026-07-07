@@ -35,6 +35,7 @@ export default function WalkthroughRecorder() {
   const [duration, setDuration] = useState(0);
   const [flash, setFlash] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [stopping, setStopping] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const audioBlobRef = useRef<Blob | null>(null);
@@ -150,7 +151,14 @@ export default function WalkthroughRecorder() {
     );
   }
 
-  function stopRecording() {
+  async function stopRecording() {
+    setStopping(true);
+    // Stopping the recorder/camera stream can briefly block the main thread
+    // on iOS; yield a couple frames first so the spinner actually paints
+    // instead of the button looking frozen for that gap.
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
     setDuration((Date.now() - startedAtRef.current) / 1000);
     if (tickRef.current) clearInterval(tickRef.current);
     recorderRef.current?.stop();
@@ -330,8 +338,10 @@ export default function WalkthroughRecorder() {
           </button>
           <button
             onClick={stopRecording}
-            className="w-20 rounded-lg bg-red-600 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-red-500"
+            disabled={stopping}
+            className="flex w-20 items-center justify-center gap-1.5 rounded-lg bg-red-600 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-red-500 disabled:opacity-70"
           >
+            {stopping && <Spinner className="h-3.5 w-3.5" />}
             Done
           </button>
         </div>
@@ -370,6 +380,9 @@ export default function WalkthroughRecorder() {
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") e.currentTarget.blur();
+          }}
           autoFocus
           enterKeyHint="done"
           placeholder="e.g. Smith residence — roof inspection"
