@@ -24,7 +24,8 @@ export async function processJob(jobId: string): Promise<void> {
     const jobPhotos = await db
       .select()
       .from(photos)
-      .where(eq(photos.jobId, jobId));
+      .where(eq(photos.jobId, jobId))
+      .orderBy(photos.offsetSeconds);
 
     // Empty segments are fine — the report falls back to a photo log. The
     // pipeline only fails on real errors (transcription/API failures).

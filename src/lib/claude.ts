@@ -53,7 +53,7 @@ const REPORT_SCHEMA = {
             type: "array",
             items: { type: "string" },
             description:
-              "ID(s) of the photo(s) taken while making this observation — usually exactly one. Every photo ID must appear in exactly one note.",
+              "ID(s) of the photo(s) that depict this observation — usually exactly one. Capture time is a rough anchor only; a photo may have been taken a few seconds before or after the observation was narrated, so match on what the photo shows, not the exact word spoken at capture time. Every photo ID must appear in exactly one note.",
           },
         },
         required: ["text", "photoIds"],
@@ -80,8 +80,10 @@ Each note:
 - Is a clean sentence or two, tidied up from speech.
 - Carries the photo(s) taken while that observation was being made — usually exactly one photo per note.
 
+A photo's capture time is only a ROUGH ANCHOR, not proof of what was being said at that instant. Contractors routinely snap the picture a few seconds BEFORE or AFTER they describe what it shows — they photograph an area and then narrate it, or narrate and then photograph. So don't weld a photo to whatever word happened to be spoken at its exact timestamp. Look at the narration in the seconds around each photo (both before and after) and attach it to the observation it actually depicts. When a photo lands during silence or during talk about a different area, pull it to the nearest observation that plausibly matches what the photo shows.
+
 Always produce a useful report from whatever is available — never refuse and never leave it empty:
-- With narration: turn each observation into its own note, pairing it with the photo(s) whose timestamps fall while it was discussed.
+- With narration: turn each observation into its own note, pairing it with the photo(s) that show what's being discussed — using the surrounding narration, not just the exact capture instant, to decide which observation each photo belongs to.
 - Little or no narration: make each photo its own note with a brief neutral caption based only on its position/time (e.g. "Photo taken at 0:12"), and say in the summary that this is primarily a photo log because limited narration was captured.
 
 Rules:

@@ -26,7 +26,8 @@ export default async function SharedReportPage({
   const jobPhotos = await db
     .select()
     .from(photos)
-    .where(eq(photos.jobId, row.job.id));
+    .where(eq(photos.jobId, row.job.id))
+    .orderBy(photos.offsetSeconds);
   const photoUrls = Object.fromEntries(
     jobPhotos.map((p) => [p.id, p.blobUrl]),
   );

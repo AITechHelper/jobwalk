@@ -59,7 +59,8 @@ export default async function JobDetailPage({
   const jobPhotos = await db
     .select()
     .from(photos)
-    .where(eq(photos.jobId, job.id));
+    .where(eq(photos.jobId, job.id))
+    .orderBy(photos.offsetSeconds);
   const photoUrls = Object.fromEntries(
     jobPhotos.map((p) => [p.id, p.blobUrl]),
   );

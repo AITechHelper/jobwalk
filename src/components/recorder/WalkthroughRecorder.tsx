@@ -163,6 +163,7 @@ export default function WalkthroughRecorder() {
     if (tickRef.current) clearInterval(tickRef.current);
     recorderRef.current?.stop();
     setPhase("review");
+    setStopping(false);
   }
 
   function removePhoto(id: string) {
