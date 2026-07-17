@@ -14,6 +14,19 @@ type CapturedPhoto = {
 
 type Phase = "idle" | "recording" | "review" | "submitting";
 
+// Persisted once the user agrees to send their walkthrough to the AI providers.
+// Apple 5.1.1/5.1.2 require explicit permission before sharing personal data
+// with a third-party AI service.
+const AI_CONSENT_KEY = "jobwalk_ai_consent_v1";
+
+function hasAiConsent(): boolean {
+  try {
+    return localStorage.getItem(AI_CONSENT_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
 function pickMimeType(): string {
   const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
   return candidates.find((t) => MediaRecorder.isTypeSupported(t)) ?? "";
@@ -36,6 +49,7 @@ export default function WalkthroughRecorder() {
   const [flash, setFlash] = useState(false);
   const [starting, setStarting] = useState(false);
   const [stopping, setStopping] = useState(false);
+  const [showConsent, setShowConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const audioBlobRef = useRef<Blob | null>(null);
@@ -181,6 +195,27 @@ export default function WalkthroughRecorder() {
     setTitle("");
     setElapsed(0);
     setPhase("idle");
+  }
+
+  // Gate report generation behind explicit AI-sharing consent. The first time,
+  // show the disclosure sheet; once agreed, generate straight away thereafter.
+  function requestGenerate() {
+    if (!title.trim()) return;
+    if (hasAiConsent()) {
+      generateReport();
+    } else {
+      setShowConsent(true);
+    }
+  }
+
+  function acceptConsent() {
+    try {
+      localStorage.setItem(AI_CONSENT_KEY, "true");
+    } catch {
+      // If storage is unavailable we still honor this session's consent.
+    }
+    setShowConsent(false);
+    generateReport();
   }
 
   async function generateReport() {
@@ -430,7 +465,7 @@ export default function WalkthroughRecorder() {
           Discard
         </button>
         <button
-          onClick={generateReport}
+          onClick={requestGenerate}
           disabled={!title.trim()}
           title={!title.trim() ? "Name the job first" : undefined}
           className="flex-1 rounded-lg bg-brand px-4 py-3 font-semibold text-white transition hover:bg-brand/85 disabled:cursor-not-allowed disabled:opacity-50"
@@ -438,6 +473,81 @@ export default function WalkthroughRecorder() {
           Generate report
         </button>
       </div>
+
+      {/* Persistent disclosure so it's always clear where the data goes. */}
+      <p className="text-center text-xs leading-relaxed text-white/40">
+        Generating a report sends your recording and photos to OpenAI and
+        Anthropic to create it.{" "}
+        <a
+          href="/privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-white/60"
+        >
+          Learn more
+        </a>
+      </p>
+
+      {showConsent && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/70"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ai-consent-title"
+          onClick={() => setShowConsent(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-t-2xl bg-navy p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="ai-consent-title" className="text-lg font-bold">
+              Before we generate your report
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-white/70">
+              To create your report, JobWalk sends your{" "}
+              <strong className="text-white">audio recording</strong> and{" "}
+              <strong className="text-white">photos</strong> to two AI providers:
+            </p>
+            <ul className="mt-3 flex list-disc flex-col gap-1.5 pl-5 text-sm leading-relaxed text-white/70">
+              <li>
+                <strong className="text-white">OpenAI</strong> — transcribes
+                your audio.
+              </li>
+              <li>
+                <strong className="text-white">Anthropic</strong> — writes the
+                report from the transcript and photos.
+              </li>
+            </ul>
+            <p className="mt-3 text-sm leading-relaxed text-white/70">
+              They process this only to generate your report. We don&apos;t sell
+              it or use it to train AI models. See our{" "}
+              <a
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand underline"
+              >
+                Privacy Policy
+              </a>
+              .
+            </p>
+            <div className="mt-5 flex flex-col gap-2">
+              <button
+                onClick={acceptConsent}
+                className="rounded-lg bg-brand px-4 py-3.5 font-semibold text-white transition active:scale-[0.99] hover:bg-brand/85"
+              >
+                Agree &amp; generate report
+              </button>
+              <button
+                onClick={() => setShowConsent(false)}
+                className="rounded-lg px-4 py-3 font-semibold text-white/60 transition hover:text-white"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -40,11 +40,6 @@ export default function PrivacyPage() {
       </h2>
       <ul className="mt-3 flex list-disc flex-col gap-2 pl-5 leading-relaxed">
         <li>
-          Audio is transcribed (via OpenAI Whisper) and, along with your
-          photos, sent to Anthropic&apos;s Claude to generate your written
-          report.
-        </li>
-        <li>
           Your account info and reports are stored so you can view, edit, and
           manage your walkthroughs.
         </li>
@@ -57,6 +52,32 @@ export default function PrivacyPage() {
           walkthrough content to train AI models.
         </li>
       </ul>
+
+      <h2 className="mt-8 text-lg font-semibold text-white">
+        Sharing with AI services
+      </h2>
+      <p className="mt-3 leading-relaxed">
+        To turn a walkthrough into a report, JobWalk shares the following with
+        third-party AI providers, and only for that purpose:
+      </p>
+      <ul className="mt-3 flex list-disc flex-col gap-2 pl-5 leading-relaxed">
+        <li>
+          <strong>OpenAI</strong> — receives your <strong>audio recording</strong>{" "}
+          to produce a text transcript.
+        </li>
+        <li>
+          <strong>Anthropic</strong> — receives that <strong>transcript</strong>{" "}
+          and your <strong>photos</strong> to write the report.
+        </li>
+      </ul>
+      <p className="mt-3 leading-relaxed">
+        We ask for your permission the first time you generate a report, and no
+        walkthrough data is sent to these providers until you agree. Under our
+        agreements with them, your data is used only to generate your report and
+        is not used to train their AI models. If you don&apos;t agree, you
+        won&apos;t be able to generate a report, but you can still use the rest
+        of the app.
+      </p>
 
       <h2 className="mt-8 text-lg font-semibold text-white">
         Where it&apos;s stored

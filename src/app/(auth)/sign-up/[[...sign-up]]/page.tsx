@@ -1,5 +1,5 @@
-import { SignUp } from "@clerk/nextjs";
+import AuthPanel from "@/components/AuthPanel";
 
 export default function SignUpPage() {
-  return <SignUp forceRedirectUrl="/onboarding" />;
+  return <AuthPanel mode="sign-up" />;
 }
