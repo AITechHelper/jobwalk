@@ -2,7 +2,7 @@
 
 import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import Spinner from "@/components/ui/Spinner";
 
 type CapturedPhoto = {
@@ -17,37 +17,11 @@ type Phase = "idle" | "recording" | "review" | "submitting";
 // Persisted once the user agrees to send their walkthrough to the AI providers.
 // Apple 5.1.1/5.1.2 require explicit permission before sharing personal data
 // with a third-party AI service.
-const AI_CONSENT_KEY = "jobwalk_ai_consent_v1";
-
-function hasAiConsent(): boolean {
-  try {
-    return localStorage.getItem(AI_CONSENT_KEY) === "true";
-  } catch {
-    return false;
-  }
-}
-
-// Minimal store so the consent gate re-renders the moment consent is granted.
-// The server snapshot is `false` (not yet consented) so the very first paint for
-// a new user — including an App Review tester — is the disclosure, never the
-// record button.
-let consentListeners: Array<() => void> = [];
-
-function subscribeConsent(onChange: () => void) {
-  consentListeners.push(onChange);
-  return () => {
-    consentListeners = consentListeners.filter((l) => l !== onChange);
-  };
-}
-
-function grantAiConsent() {
-  try {
-    localStorage.setItem(AI_CONSENT_KEY, "true");
-  } catch {
-    // Storage unavailable (private mode): consent still holds for this session.
-  }
-  consentListeners.forEach((l) => l());
-}
+// Consent is recorded per *user* (Clerk publicMetadata.aiConsentAt), not per
+// device. An earlier version kept it in localStorage, which meant one person
+// agreeing on a device silently consented every later account on that same
+// device — so a fresh reviewer account could skip the disclosure entirely.
+// The signed-in user's consent state is passed in from the server.
 
 function pickMimeType(): string {
   const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
@@ -60,7 +34,11 @@ function formatTime(totalSeconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-export default function WalkthroughRecorder() {
+export default function WalkthroughRecorder({
+  initialConsent,
+}: {
+  initialConsent: boolean;
+}) {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>("idle");
   const [submitStep, setSubmitStep] = useState("");
@@ -74,11 +52,8 @@ export default function WalkthroughRecorder() {
   const [showConsent, setShowConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const consented = useSyncExternalStore(
-    subscribeConsent,
-    hasAiConsent,
-    () => false,
-  );
+  const [consented, setConsented] = useState(initialConsent);
+  const [savingConsent, setSavingConsent] = useState(false);
 
   const audioBlobRef = useRef<Blob | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -236,8 +211,28 @@ export default function WalkthroughRecorder() {
     }
   }
 
-  function acceptConsent() {
-    grantAiConsent();
+  // Records consent against the signed-in user so it follows the account, not
+  // the device. Returns false if it couldn't be saved — we never proceed to
+  // send data on a consent we failed to record.
+  async function saveConsent(): Promise<boolean> {
+    setSavingConsent(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/ai-consent", { method: "POST" });
+      if (!res.ok) throw new Error(`consent save failed: ${res.status}`);
+      setConsented(true);
+      return true;
+    } catch (err) {
+      console.error(err);
+      setError("Couldn't save your choice — check your connection and retry.");
+      return false;
+    } finally {
+      setSavingConsent(false);
+    }
+  }
+
+  async function acceptConsentAndGenerate() {
+    if (!(await saveConsent())) return;
     setShowConsent(false);
     generateReport();
   }
@@ -366,10 +361,14 @@ export default function WalkthroughRecorder() {
           </a>
         </div>
 
+        {error && <p className="text-sm text-red-400">{error}</p>}
+
         <button
-          onClick={grantAiConsent}
-          className="rounded-xl bg-brand px-4 py-4 text-base font-semibold text-white transition active:scale-[0.99] hover:bg-brand/85"
+          onClick={saveConsent}
+          disabled={savingConsent}
+          className="flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-4 text-base font-semibold text-white transition active:scale-[0.99] hover:bg-brand/85 disabled:opacity-70"
         >
+          {savingConsent && <Spinner className="h-4 w-4" />}
           I agree — send my recordings to create reports
         </button>
         <p className="text-center text-xs leading-relaxed text-white/40">
@@ -645,9 +644,11 @@ export default function WalkthroughRecorder() {
             </p>
             <div className="mt-5 flex flex-col gap-2">
               <button
-                onClick={acceptConsent}
-                className="rounded-lg bg-brand px-4 py-3.5 font-semibold text-white transition active:scale-[0.99] hover:bg-brand/85"
+                onClick={acceptConsentAndGenerate}
+                disabled={savingConsent}
+                className="flex items-center justify-center gap-2 rounded-lg bg-brand px-4 py-3.5 font-semibold text-white transition active:scale-[0.99] hover:bg-brand/85 disabled:opacity-70"
               >
+                {savingConsent && <Spinner className="h-4 w-4" />}
                 Agree &amp; generate report
               </button>
               <button
