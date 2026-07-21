@@ -71,12 +71,28 @@ export default function PrivacyPage() {
         </li>
       </ul>
       <p className="mt-3 leading-relaxed">
-        We ask for your permission the first time you generate a report, and no
-        walkthrough data is sent to these providers until you agree. Under our
-        agreements with them, your data is used only to generate your report and
-        is not used to train their AI models. If you don&apos;t agree, you
-        won&apos;t be able to generate a report, but you can still use the rest
-        of the app.
+        <strong>We ask for your permission before any of this is sent.</strong>{" "}
+        The first time you open the recorder, JobWalk shows you what data is
+        sent and who it goes to, and you must agree before you can record or
+        send anything. No audio, photos, or transcripts are shared with OpenAI
+        or Anthropic unless you have given that permission.
+      </p>
+      <p className="mt-3 leading-relaxed">
+        Under our agreements with them, OpenAI and Anthropic process your data
+        solely to generate your report, do not use it to train their AI models,
+        and are contractually required to provide the same or equal protection
+        for your data as described in this policy. We confirm that any third
+        party we share your data with provides equivalent protection.
+      </p>
+      <h2 className="mt-8 text-lg font-semibold text-white">
+        How we collect your data
+      </h2>
+      <p className="mt-3 leading-relaxed">
+        Audio and photos are collected directly from your device&apos;s
+        microphone and camera, only while you are actively recording a
+        walkthrough and only after you grant iOS permission. Account details are
+        collected from what you enter at sign-up and onboarding. JobWalk does
+        not access your photo library, contacts, or location.
       </p>
 
       <h2 className="mt-8 text-lg font-semibold text-white">

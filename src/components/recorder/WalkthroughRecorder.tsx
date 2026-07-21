@@ -2,7 +2,7 @@
 
 import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Spinner from "@/components/ui/Spinner";
 
 type CapturedPhoto = {
@@ -25,6 +25,28 @@ function hasAiConsent(): boolean {
   } catch {
     return false;
   }
+}
+
+// Minimal store so the consent gate re-renders the moment consent is granted.
+// The server snapshot is `false` (not yet consented) so the very first paint for
+// a new user — including an App Review tester — is the disclosure, never the
+// record button.
+let consentListeners: Array<() => void> = [];
+
+function subscribeConsent(onChange: () => void) {
+  consentListeners.push(onChange);
+  return () => {
+    consentListeners = consentListeners.filter((l) => l !== onChange);
+  };
+}
+
+function grantAiConsent() {
+  try {
+    localStorage.setItem(AI_CONSENT_KEY, "true");
+  } catch {
+    // Storage unavailable (private mode): consent still holds for this session.
+  }
+  consentListeners.forEach((l) => l());
 }
 
 function pickMimeType(): string {
@@ -51,6 +73,12 @@ export default function WalkthroughRecorder() {
   const [stopping, setStopping] = useState(false);
   const [showConsent, setShowConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const consented = useSyncExternalStore(
+    subscribeConsent,
+    hasAiConsent,
+    () => false,
+  );
 
   const audioBlobRef = useRef<Blob | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -201,7 +229,7 @@ export default function WalkthroughRecorder() {
   // show the disclosure sheet; once agreed, generate straight away thereafter.
   function requestGenerate() {
     if (!title.trim()) return;
-    if (hasAiConsent()) {
+    if (consented) {
       generateReport();
     } else {
       setShowConsent(true);
@@ -209,11 +237,7 @@ export default function WalkthroughRecorder() {
   }
 
   function acceptConsent() {
-    try {
-      localStorage.setItem(AI_CONSENT_KEY, "true");
-    } catch {
-      // If storage is unavailable we still honor this session's consent.
-    }
+    grantAiConsent();
     setShowConsent(false);
     generateReport();
   }
@@ -280,6 +304,82 @@ export default function WalkthroughRecorder() {
     }
   }
 
+  // Consent gate. Shown before anything can be recorded, so permission is
+  // obtained before any personal data is captured or sent to an AI provider
+  // (App Store guidelines 5.1.1(i) / 5.1.2(i)). This is deliberately the first
+  // screen a new user sees after signing in — it must not be reachable only
+  // deep in the flow.
+  if (phase === "idle" && !consented) {
+    return (
+      <div className="mx-auto flex max-w-md flex-col gap-5 px-5 py-8">
+        <div>
+          <h1 className="text-2xl font-bold">How JobWalk creates your report</h1>
+          <p className="mt-2 text-sm leading-relaxed text-white/60">
+            Before you record, here&apos;s exactly what happens to your data.
+            We need your permission first.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-4 rounded-2xl bg-navy p-5">
+          <div>
+            <h2 className="text-sm font-semibold text-white">
+              What we send
+            </h2>
+            <p className="mt-1 text-sm leading-relaxed text-white/70">
+              The <strong className="text-white">audio you record</strong> and
+              the <strong className="text-white">photos you take</strong> during
+              a walkthrough.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-sm font-semibold text-white">Who we send it to</h2>
+            <ul className="mt-1 flex list-disc flex-col gap-1.5 pl-5 text-sm leading-relaxed text-white/70">
+              <li>
+                <strong className="text-white">OpenAI</strong> — transcribes
+                your audio recording into text.
+              </li>
+              <li>
+                <strong className="text-white">Anthropic</strong> — uses that
+                transcript and your photos to write the report.
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 className="text-sm font-semibold text-white">How it&apos;s used</h2>
+            <p className="mt-1 text-sm leading-relaxed text-white/70">
+              Only to generate your report. Your recordings and photos are never
+              sold, and are never used to train AI models. Both providers are
+              contractually required to protect your data to the same standard
+              we do.
+            </p>
+          </div>
+
+          <a
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-brand underline"
+          >
+            Read our full Privacy Policy
+          </a>
+        </div>
+
+        <button
+          onClick={grantAiConsent}
+          className="rounded-xl bg-brand px-4 py-4 text-base font-semibold text-white transition active:scale-[0.99] hover:bg-brand/85"
+        >
+          I agree — send my recordings to create reports
+        </button>
+        <p className="text-center text-xs leading-relaxed text-white/40">
+          You can&apos;t create reports without agreeing, since the report is
+          generated by these services. You can delete your data at any time.
+        </p>
+      </div>
+    );
+  }
+
   if (phase === "idle") {
     return (
       <div className="flex flex-col items-center justify-center gap-6 px-4 py-20 text-center">
@@ -306,6 +406,18 @@ export default function WalkthroughRecorder() {
           {starting ? "Starting camera…" : "Tap to start recording"}
         </p>
         {error && <p className="max-w-sm text-sm text-red-400">{error}</p>}
+        <p className="max-w-xs text-xs leading-relaxed text-white/40">
+          Your recording and photos are sent to OpenAI and Anthropic to create
+          your report.{" "}
+          <a
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-white/60"
+          >
+            Learn more
+          </a>
+        </p>
       </div>
     );
   }
