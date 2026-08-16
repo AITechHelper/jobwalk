@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-// To a contractor, a "job" IS the job site — the thing at /projects under the
-// hood. "Record" starts a walkthrough. "Account" is a big, plain settings page.
-// Three large, always-labeled tabs — easy to hit and read on a phone outdoors.
+// Projects are the job sites (Clients → Projects → Rooms/Areas). "Record"
+// starts a walkthrough. "Account" is a big, plain settings page. Three large,
+// always-labeled tabs — easy to hit and read on a phone outdoors.
 const TABS = [
-  { href: "/projects", label: "Jobs", icon: "🧰", match: ["/projects"] },
+  { href: "/projects", label: "Projects", icon: "🧰", match: ["/projects"] },
   { href: "/record", label: "Record", icon: "🎙️", match: ["/record"] },
   { href: "/account", label: "Account", icon: "👤", match: ["/account"] },
 ];

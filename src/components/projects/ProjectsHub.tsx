@@ -5,10 +5,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Spinner from "@/components/ui/Spinner";
 
-// NOTE ON WORDING: to a contractor, a "job" is the job site. In the database
-// this is still the `projects` table, but every label the user sees says
-// "job". Walkthroughs (the `jobs` table) are the recordings that live inside a
-// job. Keeping the DB names avoids a risky migration while fixing the UX.
+// WORDING: the user-facing term for a job site is "Project" (Clients →
+// Projects → Rooms/Areas), matching the `projects` table. Walkthroughs (the
+// `jobs` table) are the recordings that live inside a project.
 
 type ProjectRow = {
   id: string;
@@ -87,7 +86,7 @@ export default function ProjectsHub({
       const { project } = await res.json();
       router.push(`/projects/${project.id}`);
     } catch {
-      setError("Couldn't create job. Try again.");
+      setError("Couldn't create project. Try again.");
       setSaving(false);
     }
   }
@@ -98,7 +97,7 @@ export default function ProjectsHub({
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold">Your jobs</h1>
+        <h1 className="text-3xl font-bold">Your projects</h1>
         <button
           onClick={() => {
             setShowNew((v) => !v);
@@ -106,7 +105,7 @@ export default function ProjectsHub({
           }}
           className="rounded-xl bg-brand px-5 py-3 text-lg font-semibold text-white transition active:scale-[0.99] hover:bg-brand/85"
         >
-          {showNew ? "Close" : "+ New job"}
+          {showNew ? "Close" : "+ New project"}
         </button>
       </div>
 
@@ -114,7 +113,7 @@ export default function ProjectsHub({
         <div className="mt-4 flex flex-col gap-4 rounded-2xl border border-white/15 bg-navy/50 p-4">
           <label className="block">
             <span className="text-sm font-semibold uppercase tracking-wide text-white/60">
-              Job name
+              Project name
             </span>
             <input
               value={name}
@@ -213,16 +212,16 @@ export default function ProjectsHub({
             className="flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-4 text-lg font-semibold text-white transition active:scale-[0.99] hover:bg-brand/85 disabled:opacity-50"
           >
             {saving && <Spinner className="h-5 w-5" />}
-            Create job
+            Create project
           </button>
         </div>
       )}
 
       {projects.length === 0 ? (
         <div className="mt-16 text-center">
-          <p className="text-xl text-white/80">No jobs yet.</p>
+          <p className="text-xl text-white/80">No projects yet.</p>
           <p className="mt-2 text-base text-white/55">
-            Create a job to start recording walkthroughs and daily reports.
+            Create a project to start recording walkthroughs and daily reports.
           </p>
         </div>
       ) : (

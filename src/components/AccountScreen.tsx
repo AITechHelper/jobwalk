@@ -88,8 +88,9 @@ export default function AccountScreen({
           <div className="w-full max-w-sm rounded-2xl border border-white/15 bg-navy p-6 text-center">
             <h2 className="text-xl font-bold">Delete your account?</h2>
             <p className="mt-3 text-base leading-relaxed text-white/75">
-              This permanently deletes your account and every job, walkthrough,
-              report, photo, and recording. This can&apos;t be undone.
+              This permanently deletes your account and every project,
+              walkthrough, report, photo, and recording. This can&apos;t be
+              undone.
             </p>
             {error && <p className="mt-3 text-base text-red-400">{error}</p>}
             <div className="mt-6 flex flex-col gap-3">

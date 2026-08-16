@@ -555,7 +555,7 @@ export default function WalkthroughRecorder({
             htmlFor="walkthrough-job"
             className="block text-base font-semibold text-white/80"
           >
-            Which job is this for?
+            Which project is this for?
           </label>
           <select
             id="walkthrough-job"
@@ -563,7 +563,7 @@ export default function WalkthroughRecorder({
             onChange={(e) => setJobId(e.target.value)}
             className="mt-2 w-full rounded-xl border border-white/15 bg-navy px-4 py-3.5 text-lg text-foreground focus:border-brand focus:outline-none"
           >
-            <option value="">No job — just this walkthrough</option>
+            <option value="">No project — just this walkthrough</option>
             {jobs.map((j) => (
               <option key={j.id} value={j.id}>
                 {j.name}

@@ -68,8 +68,8 @@ export default async function JobDetailPage({
   return (
     <div>
       <div className="mx-auto max-w-3xl px-4 pt-6 print:hidden">
-        <Link href="/jobs" className="text-sm text-white/60 hover:text-brand">
-          ← All jobs
+        <Link href="/jobs" className="text-base text-white/65 hover:text-brand">
+          ← All walkthroughs
         </Link>
       </div>
       <OwnerReport
