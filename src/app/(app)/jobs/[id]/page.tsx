@@ -1,9 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { jobs, photos } from "@/lib/db/schema";
+import { jobs, photos, projectMembers, projects } from "@/lib/db/schema";
 import { getContractorByClerkId } from "@/lib/contractor";
 import type { Report } from "@/lib/claude";
 import OwnerReport from "@/components/report/OwnerReport";
@@ -65,6 +65,23 @@ export default async function JobDetailPage({
     jobPhotos.map((p) => [p.id, p.blobUrl]),
   );
 
+  // Projects this contractor can move the walkthrough into (owner/foreman),
+  // plus the one it's currently attached to (if any), so the report screen can
+  // offer a "Project" control.
+  const memberships = await db
+    .select({
+      id: projects.id,
+      name: projects.name,
+      role: projectMembers.role,
+    })
+    .from(projectMembers)
+    .innerJoin(projects, eq(projectMembers.projectId, projects.id))
+    .where(eq(projectMembers.contractorId, contractor.id))
+    .orderBy(desc(projects.createdAt));
+  const editableProjects = memberships
+    .filter((m) => m.role === "owner" || m.role === "foreman")
+    .map((m) => ({ id: m.id, name: m.name }));
+
   return (
     <div>
       <div className="mx-auto max-w-3xl px-4 pt-6 print:hidden">
@@ -82,6 +99,8 @@ export default async function JobDetailPage({
         phone={contractor.phone}
         report={job.report as Report}
         photoUrls={photoUrls}
+        projectId={job.projectId}
+        projects={editableProjects}
       />
     </div>
   );

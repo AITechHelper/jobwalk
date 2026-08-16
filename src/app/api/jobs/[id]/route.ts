@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { jobs, photos } from "@/lib/db/schema";
 import { getContractorByClerkId } from "@/lib/contractor";
+import { getProjectAccess } from "@/lib/project-access";
 import type { Report } from "@/lib/claude";
 
 // Coerce a client-supplied report into the stored shape, dropping anything
@@ -52,12 +53,23 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  const job = await loadOwnedJob(id, userId);
+  const contractor = await getContractorByClerkId(userId);
+  if (!contractor) {
+    return NextResponse.json({ error: "Job not found" }, { status: 404 });
+  }
+  const [job] = await getDb()
+    .select()
+    .from(jobs)
+    .where(and(eq(jobs.id, id), eq(jobs.contractorId, contractor.id)));
   if (!job) {
     return NextResponse.json({ error: "Job not found" }, { status: 404 });
   }
 
-  const body = (await req.json()) as { title?: unknown; report?: unknown };
+  const body = (await req.json()) as {
+    title?: unknown;
+    report?: unknown;
+    projectId?: unknown;
+  };
   const updates: Partial<typeof jobs.$inferInsert> = { updatedAt: new Date() };
 
   if (body.title !== undefined) {
@@ -68,6 +80,25 @@ export async function PATCH(
       );
     }
     updates.title = body.title.trim();
+  }
+
+  // Move the walkthrough into a project (or "" / null to detach it). Assigning
+  // requires the contractor to have edit rights on the target project.
+  if (body.projectId !== undefined) {
+    if (body.projectId === null || body.projectId === "") {
+      updates.projectId = null;
+    } else if (typeof body.projectId === "string") {
+      const access = await getProjectAccess(body.projectId, contractor.id);
+      if (!access || !access.canEdit) {
+        return NextResponse.json(
+          { error: "You can't move this walkthrough to that project" },
+          { status: 403 },
+        );
+      }
+      updates.projectId = body.projectId;
+    } else {
+      return NextResponse.json({ error: "invalid projectId" }, { status: 400 });
+    }
   }
 
   if (body.report !== undefined) {

@@ -18,6 +18,8 @@ type Props = {
   phone: string;
   report: Report;
   photoUrls: Record<string, string>;
+  projectId: string | null;
+  projects: { id: string; name: string }[];
 };
 
 export default function OwnerReport({
@@ -30,6 +32,8 @@ export default function OwnerReport({
   phone,
   report,
   photoUrls,
+  projectId,
+  projects,
 }: Props) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -37,6 +41,32 @@ export default function OwnerReport({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Which project this walkthrough belongs to. Editable inline so a standalone
+  // recording can be filed under a project (or moved) after the fact.
+  const [assignedProjectId, setAssignedProjectId] = useState(projectId ?? "");
+  const [movingProject, setMovingProject] = useState(false);
+
+  async function moveToProject(next: string) {
+    const prev = assignedProjectId;
+    setAssignedProjectId(next);
+    setMovingProject(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/jobs/${jobId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: next || null }),
+      });
+      if (!res.ok) throw new Error(`move failed: ${res.status}`);
+      router.refresh();
+    } catch {
+      setAssignedProjectId(prev);
+      setError("Couldn't move this walkthrough. Try again.");
+    } finally {
+      setMovingProject(false);
+    }
+  }
 
   // Draft state — only initialized/reset when entering edit mode.
   const [draftTitle, setDraftTitle] = useState(title);
@@ -134,7 +164,7 @@ export default function OwnerReport({
         {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
 
         <label className="block">
-          <span className="text-xs font-semibold uppercase tracking-wide text-white/50">
+          <span className="text-sm font-semibold uppercase tracking-wide text-white/60">
             Title
           </span>
           <input
@@ -145,7 +175,7 @@ export default function OwnerReport({
         </label>
 
         <label className="mt-5 block">
-          <span className="text-xs font-semibold uppercase tracking-wide text-white/50">
+          <span className="text-sm font-semibold uppercase tracking-wide text-white/60">
             Summary
           </span>
           <textarea
@@ -156,7 +186,7 @@ export default function OwnerReport({
           />
         </label>
 
-        <div className="mt-6 text-xs font-semibold uppercase tracking-wide text-white/50">
+        <div className="mt-6 text-sm font-semibold uppercase tracking-wide text-white/60">
           Notes
         </div>
         {draftNotes.map((note, i) => (
@@ -201,7 +231,7 @@ export default function OwnerReport({
         ))}
 
         <div className="mt-6">
-          <span className="text-xs font-semibold uppercase tracking-wide text-white/50">
+          <span className="text-sm font-semibold uppercase tracking-wide text-white/60">
             Recommended next steps
           </span>
           <div className="mt-2 flex flex-col gap-2">
@@ -245,7 +275,7 @@ export default function OwnerReport({
         <button
           onClick={() => setConfirmDelete(true)}
           aria-label="Delete report"
-          className="mr-auto rounded-lg px-2 py-2 text-sm font-medium text-white/40 transition hover:text-red-400"
+          className="mr-auto rounded-lg px-2 py-2 text-base font-medium text-white/55 transition hover:text-red-400"
         >
           Delete
         </button>
@@ -259,8 +289,34 @@ export default function OwnerReport({
         <ShareLinkButton shareToken={shareToken} />
       </div>
 
+      {projects.length > 0 && (
+        <div className="mx-auto mt-3 flex max-w-3xl flex-wrap items-center gap-3 px-4 print:hidden">
+          <label
+            htmlFor="assign-project"
+            className="text-base font-semibold text-white/70"
+          >
+            Project
+          </label>
+          <select
+            id="assign-project"
+            value={assignedProjectId}
+            disabled={movingProject}
+            onChange={(e) => moveToProject(e.target.value)}
+            className="min-w-0 flex-1 rounded-xl border border-white/15 bg-navy px-4 py-3 text-lg text-foreground focus:border-brand focus:outline-none disabled:opacity-60"
+          >
+            <option value="">No project — standalone</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          {movingProject && <Spinner />}
+        </div>
+      )}
+
       {error && (
-        <p className="mx-auto max-w-2xl px-4 pt-3 text-sm text-red-400">
+        <p className="mx-auto max-w-2xl px-4 pt-3 text-base text-red-400">
           {error}
         </p>
       )}
