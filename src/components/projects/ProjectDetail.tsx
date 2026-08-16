@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import JobList, { type JobListItem } from "@/components/JobList";
 import LocalDate from "@/components/LocalDate";
 import Spinner from "@/components/ui/Spinner";
 import type { ProjectAccess } from "@/lib/project-access";
@@ -35,6 +36,7 @@ export default function ProjectDetail({
   members,
   areas,
   reports,
+  walkthroughs,
 }: {
   project: {
     id: string;
@@ -48,6 +50,7 @@ export default function ProjectDetail({
   members: Member[];
   areas: Area[];
   reports: ReportRow[];
+  walkthroughs: JobListItem[];
 }) {
   const router = useRouter();
   const [creating, setCreating] = useState(false);
@@ -129,14 +132,14 @@ export default function ProjectDetail({
     <div className="mt-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">{project.name}</h1>
-          <p className="mt-1 text-sm text-white/50">
+          <h1 className="text-3xl font-bold">{project.name}</h1>
+          <p className="mt-1.5 text-base text-white/65">
             <span className="capitalize">{project.jobType}</span>
             {project.clientName && <> · {project.clientName}</>}
             {project.siteAddress && <> · {project.siteAddress}</>}
           </p>
           {!project.hasCoords && project.siteAddress && (
-            <p className="mt-1 text-xs text-amber-400/80">
+            <p className="mt-1.5 text-sm text-amber-400/90">
               Couldn&apos;t geocode this address — weather won&apos;t auto-pull.
             </p>
           )}
@@ -146,27 +149,53 @@ export default function ProjectDetail({
         </span>
       </div>
 
-      {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+      {error && <p className="mt-3 text-base text-red-400">{error}</p>}
+
+      {/* Walkthroughs — the recordings that belong to this job. This section is
+          what ties a job to its walkthroughs, which the app was missing. */}
+      <section className="mt-7">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-white/60">
+          Walkthroughs
+        </h2>
+
+        {access.canEdit && (
+          <Link
+            href={`/record?job=${project.id}`}
+            className="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-brand px-5 py-4 text-lg font-semibold text-white transition active:scale-[0.99] hover:bg-brand/85"
+          >
+            <span aria-hidden className="text-2xl leading-none">
+              🎙️
+            </span>
+            Record a walkthrough
+          </Link>
+        )}
+
+        {walkthroughs.length === 0 ? (
+          <p className="mt-3 text-base text-white/55">No walkthroughs yet.</p>
+        ) : (
+          <JobList jobs={walkthroughs} />
+        )}
+      </section>
 
       {/* Daily reports */}
-      <section className="mt-6">
+      <section className="mt-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-wide text-white/50">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-white/60">
             Daily reports
           </h2>
           {access.canEdit && (
             <button
               onClick={newReport}
               disabled={creating}
-              className="flex items-center gap-2 rounded-lg bg-brand px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-brand/85 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-base font-semibold text-white transition hover:bg-brand/85 disabled:opacity-50"
             >
-              {creating && <Spinner className="h-3.5 w-3.5" />}+ New report
+              {creating && <Spinner className="h-4 w-4" />}+ New report
             </button>
           )}
         </div>
 
         {reports.length === 0 ? (
-          <p className="mt-3 text-sm text-white/40">No reports yet.</p>
+          <p className="mt-3 text-base text-white/55">No reports yet.</p>
         ) : (
           <ul className="mt-3 flex flex-col gap-2">
             {reports.map((r) => (
@@ -201,17 +230,19 @@ export default function ProjectDetail({
       <section className="mt-8">
         <Link
           href={`/projects/${project.id}/plans`}
-          className="flex items-center justify-between rounded-xl border border-white/10 bg-navy/50 px-4 py-3 transition hover:border-brand/50"
+          className="flex items-center justify-between rounded-2xl border border-white/15 bg-navy/50 px-5 py-4 transition hover:border-brand/50"
         >
-          <span className="font-medium">Plan takeoff &amp; measurements</span>
-          <span className="text-white/40">→</span>
+          <span className="text-lg font-semibold">
+            Plan takeoff &amp; measurements
+          </span>
+          <span className="text-white/50">→</span>
         </Link>
       </section>
 
       {/* Areas — only meaningful for commercial jobs */}
       {isCommercial && (
         <section className="mt-8">
-          <h2 className="text-xs font-bold uppercase tracking-wide text-white/50">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-white/60">
             Rooms / areas
           </h2>
           {areas.length > 0 && (

@@ -36,11 +36,16 @@ function formatTime(totalSeconds: number): string {
 
 export default function WalkthroughRecorder({
   initialConsent,
+  jobs = [],
+  preselectedJobId = null,
 }: {
   initialConsent: boolean;
+  jobs?: { id: string; name: string }[];
+  preselectedJobId?: string | null;
 }) {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>("idle");
+  const [jobId, setJobId] = useState<string>(preselectedJobId ?? "");
   const [submitStep, setSubmitStep] = useState("");
   const [elapsed, setElapsed] = useState(0);
   const [photos, setPhotos] = useState<CapturedPhoto[]>([]);
@@ -243,11 +248,14 @@ export default function WalkthroughRecorder({
     setPhase("submitting");
     setError(null);
     try {
-      setSubmitStep("Creating job...");
+      setSubmitStep("Creating walkthrough...");
       const jobRes = await fetch("/api/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: title.trim() }),
+        body: JSON.stringify({
+          title: title.trim(),
+          projectId: jobId || undefined,
+        }),
       });
       if (!jobRes.ok) throw new Error(`job create failed: ${jobRes.status}`);
       const { job } = await jobRes.json();
@@ -535,11 +543,35 @@ export default function WalkthroughRecorder({
           placeholder="e.g. Smith residence — roof inspection"
           className="w-full rounded-xl border-2 border-brand/50 bg-navy px-4 py-4 text-lg text-foreground placeholder-white/40 focus:border-brand focus:outline-none"
         />
-        <p className="mt-2 text-center text-xs text-white/40">
+        <p className="mt-2 text-center text-sm text-white/50">
           {formatTime(duration)} recorded · {photos.length} photo
           {photos.length === 1 ? "" : "s"} captured
         </p>
       </div>
+
+      {jobs.length > 0 && (
+        <div>
+          <label
+            htmlFor="walkthrough-job"
+            className="block text-base font-semibold text-white/80"
+          >
+            Which job is this for?
+          </label>
+          <select
+            id="walkthrough-job"
+            value={jobId}
+            onChange={(e) => setJobId(e.target.value)}
+            className="mt-2 w-full rounded-xl border border-white/15 bg-navy px-4 py-3.5 text-lg text-foreground focus:border-brand focus:outline-none"
+          >
+            <option value="">No job — just this walkthrough</option>
+            {jobs.map((j) => (
+              <option key={j.id} value={j.id}>
+                {j.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {photos.length > 0 && (
         <div className="grid grid-cols-4 gap-2 opacity-80">
@@ -571,15 +603,15 @@ export default function WalkthroughRecorder({
       <div className="flex gap-3">
         <button
           onClick={discard}
-          className="flex-1 rounded-lg border border-white/10 px-4 py-3 font-semibold text-white/80 transition hover:border-red-500 hover:text-red-400"
+          className="flex-1 rounded-xl border border-white/15 px-4 py-4 text-lg font-semibold text-white/80 transition hover:border-red-500 hover:text-red-400"
         >
           Discard
         </button>
         <button
           onClick={requestGenerate}
           disabled={!title.trim()}
-          title={!title.trim() ? "Name the job first" : undefined}
-          className="flex-1 rounded-lg bg-brand px-4 py-3 font-semibold text-white transition hover:bg-brand/85 disabled:cursor-not-allowed disabled:opacity-50"
+          title={!title.trim() ? "Name the walkthrough first" : undefined}
+          className="flex-1 rounded-xl bg-brand px-4 py-4 text-lg font-semibold text-white transition hover:bg-brand/85 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Generate report
         </button>

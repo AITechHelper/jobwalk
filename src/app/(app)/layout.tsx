@@ -1,7 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import BottomNav from "@/components/BottomNav";
-import AccountMenu from "@/components/AccountMenu";
 
 export default async function AppLayout({
   children,
@@ -14,14 +13,13 @@ export default async function AppLayout({
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="flex items-center justify-between border-b border-white/10 bg-navy px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] print:hidden">
-        <span className="text-lg font-bold tracking-tight">
+      <header className="flex items-center justify-center border-b border-white/10 bg-navy px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] print:hidden">
+        <span className="text-xl font-bold tracking-tight">
           Job<span className="text-brand">Walk</span>
         </span>
-        <AccountMenu />
       </header>
 
-      <main className="flex-1 pb-20">{children}</main>
+      <main className="flex-1 pb-28">{children}</main>
 
       <BottomNav />
     </div>

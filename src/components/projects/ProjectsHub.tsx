@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Spinner from "@/components/ui/Spinner";
 
+// NOTE ON WORDING: to a contractor, a "job" is the job site. In the database
+// this is still the `projects` table, but every label the user sees says
+// "job". Walkthroughs (the `jobs` table) are the recordings that live inside a
+// job. Keeping the DB names avoids a risky migration while fixing the UX.
+
 type ProjectRow = {
   id: string;
   name: string;
@@ -82,72 +87,72 @@ export default function ProjectsHub({
       const { project } = await res.json();
       router.push(`/projects/${project.id}`);
     } catch {
-      setError("Couldn't create project. Try again.");
+      setError("Couldn't create job. Try again.");
       setSaving(false);
     }
   }
 
   const inputClasses =
-    "w-full rounded-lg border border-white/10 bg-navy px-3 py-2.5 text-foreground placeholder-white/40 focus:border-brand focus:outline-none";
+    "w-full rounded-xl border border-white/15 bg-navy px-4 py-3 text-lg text-foreground placeholder-white/40 focus:border-brand focus:outline-none";
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Projects</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-3xl font-bold">Your jobs</h1>
         <button
           onClick={() => {
             setShowNew((v) => !v);
             setError(null);
           }}
-          className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand/85"
+          className="rounded-xl bg-brand px-5 py-3 text-lg font-semibold text-white transition active:scale-[0.99] hover:bg-brand/85"
         >
-          {showNew ? "Close" : "+ New project"}
+          {showNew ? "Close" : "+ New job"}
         </button>
       </div>
 
       {showNew && (
-        <div className="mt-4 flex flex-col gap-3 rounded-xl border border-white/10 bg-navy/50 p-4">
+        <div className="mt-4 flex flex-col gap-4 rounded-2xl border border-white/15 bg-navy/50 p-4">
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wide text-white/50">
-              Project name
+            <span className="text-sm font-semibold uppercase tracking-wide text-white/60">
+              Job name
             </span>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Riverside Office Buildout"
-              className={`mt-1 ${inputClasses}`}
+              className={`mt-1.5 ${inputClasses}`}
             />
           </label>
 
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wide text-white/50">
+            <span className="text-sm font-semibold uppercase tracking-wide text-white/60">
               Site address
             </span>
             <input
               value={siteAddress}
               onChange={(e) => setSiteAddress(e.target.value)}
               placeholder="123 Main St, Tulsa, OK 74103"
-              className={`mt-1 ${inputClasses}`}
+              className={`mt-1.5 ${inputClasses}`}
             />
-            <span className="mt-1 block text-xs text-white/40">
+            <span className="mt-1.5 block text-sm text-white/50">
               Used to auto-pull weather for every daily report.
             </span>
           </label>
 
           <div>
-            <span className="text-xs font-semibold uppercase tracking-wide text-white/50">
+            <span className="text-sm font-semibold uppercase tracking-wide text-white/60">
               Job type
             </span>
-            <div className="mt-1 flex gap-2">
+            <div className="mt-1.5 flex gap-2">
               {(["commercial", "residential"] as const).map((t) => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setJobType(t)}
-                  className={`flex-1 rounded-lg border px-3 py-2 text-sm font-semibold capitalize transition ${
+                  className={`flex-1 rounded-xl border px-3 py-3 text-base font-semibold capitalize transition ${
                     jobType === t
                       ? "border-brand bg-brand/15 text-white"
-                      : "border-white/10 text-white/60 hover:text-white"
+                      : "border-white/15 text-white/70 hover:text-white"
                   }`}
                 >
                   {t}
@@ -157,13 +162,13 @@ export default function ProjectsHub({
           </div>
 
           <label className="block">
-            <span className="text-xs font-semibold uppercase tracking-wide text-white/50">
+            <span className="text-sm font-semibold uppercase tracking-wide text-white/60">
               Client (optional)
             </span>
             <select
               value={clientId}
               onChange={(e) => setClientId(e.target.value)}
-              className={`mt-1 ${inputClasses}`}
+              className={`mt-1.5 ${inputClasses}`}
             >
               <option value="">— No client —</option>
               {clients.map((c) => (
@@ -175,7 +180,7 @@ export default function ProjectsHub({
             <button
               type="button"
               onClick={() => setShowNewClient((v) => !v)}
-              className="mt-1 text-xs font-semibold text-brand hover:text-brand/80"
+              className="mt-2 text-base font-semibold text-brand hover:text-brand/80"
             >
               {showNewClient ? "Cancel" : "+ Add a new client"}
             </button>
@@ -193,48 +198,48 @@ export default function ProjectsHub({
                 type="button"
                 onClick={createClient}
                 disabled={saving || !clientName.trim()}
-                className="shrink-0 rounded-lg border border-white/15 px-3 py-2 text-sm font-semibold text-white/80 transition hover:text-white disabled:opacity-50"
+                className="shrink-0 rounded-xl border border-white/20 px-4 py-3 text-base font-semibold text-white/85 transition hover:text-white disabled:opacity-50"
               >
                 Add
               </button>
             </div>
           )}
 
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && <p className="text-base text-red-400">{error}</p>}
 
           <button
             onClick={createProject}
             disabled={saving || !name.trim()}
-            className="flex items-center justify-center gap-2 rounded-lg bg-brand px-4 py-3 font-semibold text-white transition hover:bg-brand/85 disabled:opacity-50"
+            className="flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-4 text-lg font-semibold text-white transition active:scale-[0.99] hover:bg-brand/85 disabled:opacity-50"
           >
-            {saving && <Spinner className="h-4 w-4" />}
-            Create project
+            {saving && <Spinner className="h-5 w-5" />}
+            Create job
           </button>
         </div>
       )}
 
       {projects.length === 0 ? (
-        <div className="mt-16 text-center text-white/60">
-          <p>No projects yet.</p>
-          <p className="mt-1 text-sm text-white/40">
-            Create a project to start logging daily reports.
+        <div className="mt-16 text-center">
+          <p className="text-xl text-white/80">No jobs yet.</p>
+          <p className="mt-2 text-base text-white/55">
+            Create a job to start recording walkthroughs and daily reports.
           </p>
         </div>
       ) : (
-        <ul className="mt-5 flex flex-col gap-2">
+        <ul className="mt-5 flex flex-col gap-3">
           {projects.map((p) => (
             <li key={p.id}>
               <Link
                 href={`/projects/${p.id}`}
-                className="block rounded-xl border border-white/10 bg-navy/50 p-4 transition hover:border-brand/50"
+                className="block rounded-2xl border border-white/15 bg-navy p-5 transition active:scale-[0.99] hover:border-brand/60"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-semibold">{p.name}</span>
-                  <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-white/70">
+                  <span className="text-xl font-bold">{p.name}</span>
+                  <span className="shrink-0 rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-white/80">
                     {ROLE_LABEL[p.role]}
                   </span>
                 </div>
-                <div className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-white/50">
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 text-base text-white/65">
                   <span className="capitalize">{p.jobType}</span>
                   {p.clientName && <span>· {p.clientName}</span>}
                   {p.siteAddress && <span>· {p.siteAddress}</span>}
@@ -244,6 +249,13 @@ export default function ProjectsHub({
           ))}
         </ul>
       )}
+
+      <Link
+        href="/jobs"
+        className="mt-8 flex items-center justify-center gap-2 text-base font-semibold text-white/60 hover:text-white"
+      >
+        View all walkthroughs →
+      </Link>
     </div>
   );
 }

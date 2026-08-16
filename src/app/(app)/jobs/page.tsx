@@ -35,29 +35,35 @@ export default async function JobsPage({
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="text-2xl font-bold">Your jobs</h1>
+      <Link
+        href="/projects"
+        className="text-base text-white/65 hover:text-brand"
+      >
+        ← Jobs
+      </Link>
+      <h1 className="mt-2 text-3xl font-bold">All walkthroughs</h1>
 
       <form className="mt-4">
         <input
           type="search"
           name="q"
           defaultValue={search ?? ""}
-          placeholder="Search jobs..."
-          className="w-full rounded-lg border border-white/10 bg-navy px-4 py-3 text-foreground placeholder-white/40 focus:border-brand focus:outline-none"
+          placeholder="Search walkthroughs..."
+          className="w-full rounded-xl border border-white/15 bg-navy px-4 py-3.5 text-lg text-foreground placeholder-white/40 focus:border-brand focus:outline-none"
         />
       </form>
 
       {rows.length === 0 ? (
-        <div className="mt-16 flex flex-col items-center gap-3 text-center">
-          <p className="text-white/60">
+        <div className="mt-16 flex flex-col items-center gap-4 text-center">
+          <p className="text-lg text-white/70">
             {search
-              ? `No jobs matching "${search}".`
+              ? `No walkthroughs matching "${search}".`
               : "No walkthroughs yet."}
           </p>
           {!search && (
             <Link
               href="/record"
-              className="rounded-lg bg-brand px-5 py-3 font-semibold text-white transition hover:bg-brand/85"
+              className="rounded-xl bg-brand px-6 py-4 text-lg font-semibold text-white transition active:scale-[0.99] hover:bg-brand/85"
             >
               Record your first walkthrough
             </Link>

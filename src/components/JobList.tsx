@@ -127,13 +127,13 @@ export default function JobList({ jobs }: { jobs: JobListItem[] }) {
               }}
             >
               <div className="min-w-0">
-                <p className="truncate font-semibold">{job.title}</p>
-                <p className="mt-0.5 text-xs text-white/50">
+                <p className="truncate text-lg font-semibold">{job.title}</p>
+                <p className="mt-0.5 text-sm text-white/60">
                   <LocalDate iso={job.createdAt} />
                 </p>
               </div>
               <span
-                className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${status.classes}`}
+                className={`shrink-0 rounded-full px-3 py-1 text-sm font-medium ${status.classes}`}
               >
                 {status.label}
               </span>

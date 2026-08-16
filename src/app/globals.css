@@ -14,18 +14,27 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Accessibility: many JobWalk users are older contractors reading a phone in
+   bright sun on a job site. Bump the root size so every rem-based size in the
+   app scales up ~12%, giving big, legible text everywhere without touching
+   each component. */
+html {
+  font-size: 18px;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  line-height: 1.5;
 }
 
-/* iOS zooms the page when focusing an input smaller than 16px and then gets
-   stuck. Force form controls to 16px so that never triggers. */
+/* Form controls: 1rem (18px) is comfortably above the 16px threshold that
+   triggers iOS focus auto-zoom, so we get bigger inputs AND no zoom glitch. */
 input,
 select,
 textarea {
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 /* Print / Save-as-PDF: the report is a light "paper" sheet, so drop the dark

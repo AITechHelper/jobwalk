@@ -7,6 +7,7 @@ import {
   clients,
   contractors,
   dailyReports,
+  jobs,
   projectAreas,
   projectMembers,
 } from "@/lib/db/schema";
@@ -68,10 +69,23 @@ export default async function ProjectDetailPage({
     .where(eq(dailyReports.projectId, id))
     .orderBy(desc(dailyReports.reportDate), desc(dailyReports.createdAt));
 
+  // The walkthroughs recorded for this job — the link that was missing before,
+  // so a job actually shows the recordings that belong to it.
+  const walkthroughs = await db
+    .select({
+      id: jobs.id,
+      title: jobs.title,
+      status: jobs.status,
+      createdAt: jobs.createdAt,
+    })
+    .from(jobs)
+    .where(eq(jobs.projectId, id))
+    .orderBy(desc(jobs.createdAt));
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
-      <Link href="/projects" className="text-sm text-white/60 hover:text-brand">
-        ← All projects
+      <Link href="/projects" className="text-base text-white/65 hover:text-brand">
+        ← All jobs
       </Link>
 
       <ProjectDetail
@@ -87,6 +101,12 @@ export default async function ProjectDetailPage({
         members={members}
         areas={areas}
         reports={reports}
+        walkthroughs={walkthroughs.map((w) => ({
+          id: w.id,
+          title: w.title,
+          status: w.status,
+          createdAt: w.createdAt.toISOString(),
+        }))}
       />
     </div>
   );

@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { jobs } from "@/lib/db/schema";
 import { getContractorByClerkId } from "@/lib/contractor";
+import { getProjectAccess } from "@/lib/project-access";
 
 export async function POST(req: Request) {
   const { userId } = await auth();
@@ -19,15 +20,33 @@ export async function POST(req: Request) {
     );
   }
 
-  const { title } = await req.json();
+  const { title, projectId } = (await req.json()) as {
+    title?: unknown;
+    projectId?: unknown;
+  };
   if (typeof title !== "string" || !title.trim()) {
     return NextResponse.json({ error: "title is required" }, { status: 400 });
+  }
+
+  // A walkthrough can be attached to a job (project). Only members who can edit
+  // that job may file walkthroughs under it; otherwise it stays standalone.
+  let linkedProjectId: string | null = null;
+  if (typeof projectId === "string" && projectId) {
+    const access = await getProjectAccess(projectId, contractor.id);
+    if (!access || !access.canEdit) {
+      return NextResponse.json(
+        { error: "You can't add walkthroughs to that job" },
+        { status: 403 },
+      );
+    }
+    linkedProjectId = projectId;
   }
 
   const [job] = await getDb()
     .insert(jobs)
     .values({
       contractorId: contractor.id,
+      projectId: linkedProjectId,
       title: title.trim(),
       shareToken: randomBytes(16).toString("base64url"),
     })
