@@ -11,6 +11,7 @@ import ReportComments from "./ReportComments";
 import PlanProgressSnapshot, {
   type SnapshotMark,
 } from "./PlanProgressSnapshot";
+import type { CaptureMerge } from "@/lib/captureMerge";
 import {
   rowTotalHours,
   totalEquipmentHours,
@@ -60,6 +61,14 @@ type ProgressPlan = {
   marks: SnapshotMark[];
 };
 
+type CaptureSession = {
+  id: string;
+  title: string;
+  status: string;
+  contributorName: string;
+};
+type CapturePhoto = { id: string; blobUrl: string; contributorName: string };
+
 export default function DailyReportEditor({
   canEdit,
   report,
@@ -67,6 +76,9 @@ export default function DailyReportEditor({
   company,
   projectId,
   progressPlans,
+  captureSessions,
+  capturePhotos,
+  contributions,
   areas,
   crew,
   activities,
@@ -79,6 +91,9 @@ export default function DailyReportEditor({
   company: { businessName: string | null; phone: string | null };
   projectId: string;
   progressPlans: ProgressPlan[];
+  captureSessions: CaptureSession[];
+  capturePhotos: CapturePhoto[];
+  contributions: CaptureMerge | null;
   areas: Area[];
   crew: Crew[];
   activities: Activity[];
@@ -91,6 +106,28 @@ export default function DailyReportEditor({
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [merging, setMerging] = useState(false);
+
+  async function remergeCaptures() {
+    setMerging(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/reports/${report.id}/merge-captures`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "merge failed");
+      }
+      router.refresh();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Couldn't merge capture sessions.",
+      );
+    } finally {
+      setMerging(false);
+    }
+  }
 
   // ---- draft state (initialized on entering edit mode) ----
   const [reportDate, setReportDate] = useState(report.reportDate);
@@ -280,6 +317,49 @@ export default function DailyReportEditor({
 
           {report.weather && <WeatherCard weather={report.weather} />}
 
+          {/* Field Capture — merged narrative + attribution from the crew's
+              capture sessions, with their photos. */}
+          {(contributions || capturePhotos.length > 0) && (
+            <Section title="Field Capture">
+              {contributions?.narrative && (
+                <p className="whitespace-pre-wrap leading-relaxed text-neutral-700">
+                  {contributions.narrative}
+                </p>
+              )}
+              {contributions && contributions.contributors.length > 0 && (
+                <div className="mt-3 flex flex-col gap-1.5">
+                  {contributions.contributors.map((c, i) => (
+                    <p key={i} className="text-sm text-neutral-600">
+                      <span className="font-semibold text-neutral-800">
+                        {c.name}:
+                      </span>{" "}
+                      {c.summary}
+                    </p>
+                  ))}
+                </div>
+              )}
+              {capturePhotos.length > 0 && (
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {capturePhotos.map((p) => (
+                    <div key={p.id}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={p.blobUrl}
+                        alt=""
+                        className="aspect-square w-full rounded-lg border border-neutral-200 object-cover"
+                      />
+                      {p.contributorName && (
+                        <p className="mt-0.5 text-[11px] text-neutral-400">
+                          {p.contributorName}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Section>
+          )}
+
           {/* Workforce */}
           <Section title="Workforce">
             {report.body.workforce.length === 0 ? (
@@ -391,6 +471,68 @@ export default function DailyReportEditor({
           {project.name} · Daily report
         </footer>
       </article>
+
+      {/* Capture sessions — multi-contributor recording, outside the sheet */}
+      {canEdit && (
+        <div className="mt-4 rounded-2xl border border-white/10 bg-navy/40 p-4 print:hidden">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-white/60">
+              Capture sessions
+            </h2>
+            <Link
+              href={`/record?report=${report.id}`}
+              className="rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-white transition hover:bg-brand/85"
+            >
+              + Add session
+            </Link>
+          </div>
+          {captureSessions.length === 0 ? (
+            <p className="mt-2 text-sm text-white/50">
+              No capture sessions yet. Any team member can record one — they
+              merge into this report&apos;s field capture.
+            </p>
+          ) : (
+            <>
+              <ul className="mt-2 flex flex-col gap-1.5">
+                {captureSessions.map((s) => (
+                  <li
+                    key={s.id}
+                    className="flex items-center justify-between gap-2 rounded-lg bg-navy/50 px-3 py-2 text-sm"
+                  >
+                    <span className="min-w-0 flex-1 truncate">
+                      {s.contributorName}
+                      <span className="text-white/40"> · {s.title}</span>
+                    </span>
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                        s.status === "ready"
+                          ? "bg-green-500/15 text-green-400"
+                          : s.status === "failed"
+                            ? "bg-red-500/15 text-red-400"
+                            : "bg-white/10 text-white/60"
+                      }`}
+                    >
+                      {s.status === "ready"
+                        ? "Ready"
+                        : s.status === "failed"
+                          ? "Failed"
+                          : "Processing"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={remergeCaptures}
+                disabled={merging}
+                className="mt-3 flex items-center gap-2 rounded-lg border border-white/15 px-3 py-2 text-sm font-semibold text-white/80 transition hover:text-white disabled:opacity-50"
+              >
+                {merging && <Spinner className="h-4 w-4" />}
+                Re-merge sessions
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Photo management for editors, outside the printable sheet */}
       {canEdit && (

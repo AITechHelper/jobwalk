@@ -38,10 +38,14 @@ export default function WalkthroughRecorder({
   initialConsent,
   jobs = [],
   preselectedJobId = null,
+  reportContext = null,
 }: {
   initialConsent: boolean;
   jobs?: { id: string; name: string }[];
   preselectedJobId?: string | null;
+  // When set, this recording is a capture session that feeds a specific daily
+  // report: it links to that report and, once processed, triggers the merge.
+  reportContext?: { id: string; projectId: string; label: string } | null;
 }) {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>("idle");
@@ -248,14 +252,17 @@ export default function WalkthroughRecorder({
     setPhase("submitting");
     setError(null);
     try {
-      setSubmitStep("Creating walkthrough...");
+      setSubmitStep(
+        reportContext ? "Starting capture session..." : "Creating walkthrough...",
+      );
       const jobRes = await fetch("/api/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: title.trim(),
-          projectId: jobId || undefined,
-        }),
+        body: JSON.stringify(
+          reportContext
+            ? { title: title.trim(), reportId: reportContext.id }
+            : { title: title.trim(), projectId: jobId || undefined },
+        ),
       });
       if (!jobRes.ok) throw new Error(`job create failed: ${jobRes.status}`);
       const { job } = await jobRes.json();
@@ -285,7 +292,11 @@ export default function WalkthroughRecorder({
         });
       }
 
-      setSubmitStep("Generating your report — this takes a minute or two...");
+      setSubmitStep(
+        reportContext
+          ? "Transcribing your session — this takes a minute or two..."
+          : "Generating your report — this takes a minute or two...",
+      );
       const finalizeRes = await fetch(`/api/jobs/${job.id}/finalize`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -295,6 +306,19 @@ export default function WalkthroughRecorder({
           photos: uploadedPhotos,
         }),
       });
+
+      if (reportContext) {
+        // Wait for transcription, then fold this and every other ready session
+        // into the day's unified report before returning to it.
+        if (finalizeRes.ok) {
+          setSubmitStep("Merging into the daily report...");
+          await fetch(`/api/reports/${reportContext.id}/merge-captures`, {
+            method: "POST",
+          }).catch(() => {});
+        }
+        router.push(`/reports/${reportContext.id}`);
+        return;
+      }
 
       router.push(`/jobs/${job.id}`);
       if (!finalizeRes.ok) return;
@@ -524,11 +548,21 @@ export default function WalkthroughRecorder({
     <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-10">
       <div className="text-center">
         <span className="text-3xl">✅</span>
-        <h1 className="mt-2 text-2xl font-bold">Name this walkthrough</h1>
+        <h1 className="mt-2 text-2xl font-bold">
+          {reportContext ? "Name this capture session" : "Name this walkthrough"}
+        </h1>
         <p className="mt-1 text-sm text-white/60">
-          Give it a name, then generate your report.
+          {reportContext
+            ? "Give it a name, then add it to the daily report."
+            : "Give it a name, then generate your report."}
         </p>
       </div>
+
+      {reportContext && (
+        <p className="rounded-xl border border-brand/30 bg-brand/10 px-4 py-3 text-center text-sm text-brand">
+          Contributing to {reportContext.label}
+        </p>
+      )}
 
       <div>
         <input
@@ -549,7 +583,7 @@ export default function WalkthroughRecorder({
         </p>
       </div>
 
-      {jobs.length > 0 && (
+      {!reportContext && jobs.length > 0 && (
         <div>
           <label
             htmlFor="walkthrough-job"
@@ -610,10 +644,10 @@ export default function WalkthroughRecorder({
         <button
           onClick={requestGenerate}
           disabled={!title.trim()}
-          title={!title.trim() ? "Name the walkthrough first" : undefined}
+          title={!title.trim() ? "Name it first" : undefined}
           className="flex-1 rounded-xl bg-brand px-4 py-4 text-lg font-semibold text-white transition hover:bg-brand/85 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Generate report
+          {reportContext ? "Add to daily report" : "Generate report"}
         </button>
       </div>
 

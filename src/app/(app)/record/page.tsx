@@ -1,15 +1,16 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { projectMembers, projects } from "@/lib/db/schema";
+import { dailyReports, projectMembers, projects } from "@/lib/db/schema";
 import { getContractorByClerkId } from "@/lib/contractor";
+import { canEditReports } from "@/lib/project-access";
 import WalkthroughRecorder from "@/components/recorder/WalkthroughRecorder";
 
 export default async function RecordPage({
   searchParams,
 }: {
-  searchParams: Promise<{ job?: string }>;
+  searchParams: Promise<{ job?: string; report?: string }>;
 }) {
   // Consent lives on the user, so a fresh account always sees the disclosure
   // even on a device where someone else already agreed.
@@ -38,15 +39,48 @@ export default async function RecordPage({
     .filter((m) => m.role === "owner" || m.role === "foreman")
     .map((m) => ({ id: m.id, name: m.name }));
 
-  const { job } = await searchParams;
+  const { job, report } = await searchParams;
   const preselectedJobId =
     job && editableJobs.some((j) => j.id === job) ? job : null;
+
+  // Capture-session context: recording toward a specific daily report. Verify
+  // the caller can edit that report's project before offering it.
+  let reportContext: { id: string; projectId: string; label: string } | null =
+    null;
+  if (report) {
+    const [row] = await getDb()
+      .select({
+        id: dailyReports.id,
+        projectId: dailyReports.projectId,
+        reportDate: dailyReports.reportDate,
+        projectName: projects.name,
+        role: projectMembers.role,
+      })
+      .from(dailyReports)
+      .innerJoin(projects, eq(dailyReports.projectId, projects.id))
+      .innerJoin(
+        projectMembers,
+        and(
+          eq(projectMembers.projectId, dailyReports.projectId),
+          eq(projectMembers.contractorId, contractor.id),
+        ),
+      )
+      .where(eq(dailyReports.id, report));
+    if (row && canEditReports(row.role)) {
+      reportContext = {
+        id: row.id,
+        projectId: row.projectId,
+        label: `${row.projectName} · ${row.reportDate}`,
+      };
+    }
+  }
 
   return (
     <WalkthroughRecorder
       initialConsent={consented}
       jobs={editableJobs}
       preselectedJobId={preselectedJobId}
+      reportContext={reportContext}
     />
   );
 }

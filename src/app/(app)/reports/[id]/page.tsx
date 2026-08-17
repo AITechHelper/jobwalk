@@ -1,12 +1,14 @@
 import { auth } from "@clerk/nextjs/server";
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import {
   clients,
   contractors,
+  jobs,
   measurements,
+  photos as walkthroughPhotos,
   planProgressMarks,
   plans,
   projectAreas,
@@ -20,6 +22,7 @@ import { loadReportForMember } from "@/lib/report-access";
 import { getOrSeedActivityTypes } from "@/lib/lookups";
 import { readReportBody } from "@/lib/dailyReport";
 import { colorForStatus } from "@/lib/progress";
+import type { CaptureMerge } from "@/lib/captureMerge";
 import type { Point } from "@/lib/scale";
 import type { SnapshotMark } from "@/components/report/PlanProgressSnapshot";
 import type { WeatherData } from "@/lib/weather";
@@ -164,6 +167,42 @@ export default async function ReportPage({
     });
   }
 
+  // Capture sessions (walkthroughs) feeding this report, with who recorded each.
+  const sessionRows = await db
+    .select({
+      id: jobs.id,
+      title: jobs.title,
+      status: jobs.status,
+      contributorName: contractors.name,
+    })
+    .from(jobs)
+    .innerJoin(contractors, eq(jobs.contractorId, contractors.id))
+    .where(eq(jobs.dailyReportId, id))
+    .orderBy(asc(jobs.createdAt));
+
+  // Photos from those sessions, surfaced read-only in the report, attributed to
+  // the contributor who took them.
+  const nameByJob = new Map(sessionRows.map((s) => [s.id, s.contributorName]));
+  const sessionIds = sessionRows.map((s) => s.id);
+  const capturePhotoRows = sessionIds.length
+    ? await db
+        .select({
+          id: walkthroughPhotos.id,
+          blobUrl: walkthroughPhotos.blobUrl,
+          jobId: walkthroughPhotos.jobId,
+        })
+        .from(walkthroughPhotos)
+        .where(inArray(walkthroughPhotos.jobId, sessionIds))
+        .orderBy(asc(walkthroughPhotos.offsetSeconds))
+    : [];
+  const capturePhotos = capturePhotoRows.map((p) => ({
+    id: p.id,
+    blobUrl: p.blobUrl,
+    contributorName: nameByJob.get(p.jobId) ?? "",
+  }));
+
+  const contributions = (report.contributions as CaptureMerge | null) ?? null;
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       <Link
@@ -197,6 +236,14 @@ export default async function ReportPage({
         }}
         projectId={report.projectId}
         progressPlans={progressPlans}
+        captureSessions={sessionRows.map((s) => ({
+          id: s.id,
+          title: s.title,
+          status: s.status,
+          contributorName: s.contributorName,
+        }))}
+        capturePhotos={capturePhotos}
+        contributions={contributions}
         areas={areas}
         crew={projectCrew.map((m) => ({
           id: m.id,
