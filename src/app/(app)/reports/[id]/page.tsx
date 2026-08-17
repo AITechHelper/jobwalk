@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import {
   clients,
+  contractors,
   projectAreas,
   projects,
   reportComments,
@@ -46,6 +47,17 @@ export default async function ReportPage({
         .from(clients)
         .where(eq(clients.id, project.clientId))
     : [];
+
+  // The company that owns this project — its business name and phone head every
+  // report so a contractor never re-types them. Sourced from the account, not
+  // the report.
+  const [company] = await db
+    .select({
+      businessName: contractors.businessName,
+      phone: contractors.phone,
+    })
+    .from(contractors)
+    .where(eq(contractors.id, project.contractorId));
 
   const areas = await db
     .select({ id: projectAreas.id, name: projectAreas.name })
@@ -109,6 +121,10 @@ export default async function ReportPage({
           name: project?.name ?? "",
           siteAddress: project?.siteAddress ?? null,
           clientName: client?.name ?? null,
+        }}
+        company={{
+          businessName: company?.businessName ?? null,
+          phone: company?.phone ?? null,
         }}
         areas={areas}
         crew={projectCrew.map((m) => ({

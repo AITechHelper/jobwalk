@@ -167,6 +167,41 @@ export default function PlanViewer({
     setPan({ x: 0, y: 0 });
   }, [base]);
 
+  // Mouse-wheel / trackpad zoom, centered on the cursor — the desktop
+  // equivalent of two-finger pinch, so measuring feels the same on a laptop as
+  // on a tablet. Attached natively with { passive: false } because the handler
+  // calls preventDefault to stop the page from scrolling under the plan.
+  const zoomStateRef = useRef(zoom);
+  zoomStateRef.current = zoom;
+  const panStateRef = useRef(pan);
+  panStateRef.current = pan;
+  useEffect(() => {
+    const vp = viewportRef.current;
+    if (!vp) return;
+    function onWheel(e: WheelEvent) {
+      e.preventDefault();
+      const z = zoomStateRef.current;
+      const p = panStateRef.current;
+      // Smooth exponential zoom; ctrl/⌘ (pinch-zoom gesture on trackpads) zooms
+      // a touch faster to match the muscle memory of a pinch.
+      const speed = e.ctrlKey ? 0.01 : 0.0015;
+      const newZoom = Math.min(
+        MAX_ZOOM,
+        Math.max(MIN_ZOOM, z * Math.exp(-e.deltaY * speed)),
+      );
+      const rect = vp!.getBoundingClientRect();
+      const vx = e.clientX - rect.left;
+      const vy = e.clientY - rect.top;
+      // Keep the content point under the cursor fixed as we scale.
+      const cx = (vx - p.x) / z;
+      const cy = (vy - p.y) / z;
+      setZoom(newZoom);
+      setPan({ x: vx - cx * newZoom, y: vy - cy * newZoom });
+    }
+    vp.addEventListener("wheel", onWheel, { passive: false });
+    return () => vp.removeEventListener("wheel", onWheel);
+  }, []);
+
   // -------------------------------------------------------------------------
   // Scale selection → calibrate feet-per-pixel and persist.
   // -------------------------------------------------------------------------
@@ -558,10 +593,10 @@ export default function PlanViewer({
       {feetPerPixel && canEdit && (
         <p className="mt-2 text-xs text-white/40">
           {mode === "segment"
-            ? "Press and drag across a wall to measure it."
+            ? "Press and drag across a wall to measure it. Scroll or pinch to zoom."
             : mode === "polyline"
-              ? "Tap each corner, then Finish. Two fingers to zoom/pan."
-              : "Drag to pan. Two fingers to zoom."}
+              ? "Tap each corner, then Finish. Scroll or pinch to zoom, two fingers to pan."
+              : "Drag to pan. Scroll or pinch to zoom."}
         </p>
       )}
 

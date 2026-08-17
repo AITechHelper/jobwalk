@@ -50,6 +50,7 @@ export default function DailyReportEditor({
   canEdit,
   report,
   project,
+  company,
   areas,
   crew,
   activities,
@@ -59,6 +60,7 @@ export default function DailyReportEditor({
   canEdit: boolean;
   report: ReportData;
   project: { name: string; siteAddress: string | null; clientName: string | null };
+  company: { businessName: string | null; phone: string | null };
   areas: Area[];
   crew: Crew[];
   activities: Activity[];
@@ -211,9 +213,21 @@ export default function DailyReportEditor({
 
       <article className="report-sheet mt-4 overflow-hidden rounded-2xl bg-white text-neutral-800 shadow-xl ring-1 ring-black/5 print:mt-0 print:rounded-none print:shadow-none print:ring-0">
         <header className="bg-brand px-6 py-6 text-white">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
-            Daily Report
-          </p>
+          <div className="flex items-start justify-between gap-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
+              Daily Report
+            </p>
+            {(company.businessName || company.phone) && (
+              <div className="text-right text-xs text-white/80">
+                {company.businessName && (
+                  <p className="font-semibold text-white/95">
+                    {company.businessName}
+                  </p>
+                )}
+                {company.phone && <p>{company.phone}</p>}
+              </div>
+            )}
+          </div>
           <h1 className="mt-1 text-2xl font-bold leading-tight">
             {project.name}
           </h1>
