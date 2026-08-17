@@ -17,15 +17,20 @@ export default function PlansList({
   projectId,
   canEdit,
   plans,
+  reportContext = null,
 }: {
   projectId: string;
   canEdit: boolean;
   plans: PlanRow[];
+  // When set, the list is being used to pick a plan to log progress against a
+  // specific daily report; plan links carry the report context onward.
+  reportContext?: { id: string; label: string } | null;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const suffix = reportContext ? `?report=${reportContext.id}` : "";
 
   async function onFile(file: File | undefined) {
     if (!file) return;
@@ -51,7 +56,7 @@ export default function PlansList({
       });
       if (!res.ok) throw new Error();
       const { plan } = await res.json();
-      router.push(`/projects/${projectId}/plans/${plan.id}`);
+      router.push(`/projects/${projectId}/plans/${plan.id}${suffix}`);
     } catch {
       setError("Upload failed. Try a PDF or image file.");
       setUploading(false);
@@ -61,6 +66,11 @@ export default function PlansList({
 
   return (
     <div className="mt-5">
+      {reportContext && (
+        <p className="mb-3 rounded-lg border border-brand/30 bg-brand/10 px-3 py-2 text-sm text-brand">
+          Pick a plan to mark progress for {reportContext.label}&apos;s report.
+        </p>
+      )}
       {canEdit && (
         <div className="flex flex-col gap-2 rounded-xl border border-white/10 bg-navy/50 p-4">
           <span className="text-xs font-semibold uppercase tracking-wide text-white/50">
@@ -88,7 +98,7 @@ export default function PlansList({
           {plans.map((p) => (
             <li key={p.id}>
               <Link
-                href={`/projects/${projectId}/plans/${p.id}`}
+                href={`/projects/${projectId}/plans/${p.id}${suffix}`}
                 className="flex items-center justify-between rounded-xl border border-white/10 bg-navy/50 px-4 py-3 transition hover:border-brand/50"
               >
                 <span className="font-medium">{p.name}</span>

@@ -50,6 +50,13 @@ export const jobs = pgTable("jobs", {
   projectId: uuid("project_id").references(() => projects.id, {
     onDelete: "set null",
   }),
+  // When set, this walkthrough is a capture session that feeds a specific day's
+  // daily report (multi-contributor capture). Multiple sessions from different
+  // team members can point at the same daily report; a merge step folds their
+  // transcripts into the report's unified body. Null = standalone walkthrough.
+  dailyReportId: uuid("daily_report_id").references(() => dailyReports.id, {
+    onDelete: "set null",
+  }),
   title: text("title").notNull(),
   clientName: text("client_name"),
   address: text("address"),
@@ -137,6 +144,10 @@ export const projects = pgTable("projects", {
   name: text("name").notNull(),
   siteAddress: text("site_address"),
   jobType: jobType("job_type").notNull().default("commercial"),
+  // Default general contractor for this site. New daily reports pre-fill their
+  // (still per-report editable) generalContractor from this, so a foreman never
+  // retypes it every day.
+  generalContractor: text("general_contractor"),
   latitude: real("latitude"),
   longitude: real("longitude"),
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -235,6 +246,10 @@ export const dailyReports = pgTable("daily_reports", {
   generalContractor: text("general_contractor"),
   reviewerName: text("reviewer_name"),
   body: jsonb("body"),
+  // Per-contributor attribution for multi-contributor capture: an array of
+  // { contractorId, name, sessionJobId, summary } describing whose capture
+  // sessions were merged into this report's body. See lib/captureMerge.ts.
+  contributions: jsonb("contributions"),
   weather: jsonb("weather"),
   shareToken: text("share_token").notNull().unique(),
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -255,6 +270,12 @@ export const reportPhotos = pgTable("report_photos", {
     onDelete: "set null",
   }),
   blobUrl: text("blob_url").notNull(),
+  // Annotated copy (drawings/markup flattened onto the photo), uploaded as a
+  // NEW blob — the original blobUrl is never overwritten. Null until annotated.
+  annotatedBlobUrl: text("annotated_blob_url"),
+  // Vector markup strokes so an annotation can be reopened and edited, stored
+  // in the photo's natural-pixel space. See PhotoAnnotator.
+  annotation: jsonb("annotation"),
   caption: text("caption"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -326,6 +347,43 @@ export const measurements = pgTable("measurements", {
   // Computed real-world length in feet at save time.
   lengthFeet: real("length_feet"),
   isClosed: boolean("is_closed").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+// ---------------------------------------------------------------------------
+// Plan Progress Marking (Part 4)
+//
+// A second mode on the plan tool: mark parts of the drawing complete with a
+// status tag. A mark either references an already-traced measurement (tag a
+// wall) OR carries its own freeform points (drop a pin/region), never both.
+// Marks optionally tie to a daily report so a report can show what got
+// completed that day directly on the drawing. Progress-only — no cost logic.
+// ---------------------------------------------------------------------------
+export const planProgressMarks = pgTable("plan_progress_marks", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  planId: uuid("plan_id")
+    .notNull()
+    .references(() => plans.id, { onDelete: "cascade" }),
+  // Optional: the traced measurement this mark tags. Null for freeform marks.
+  measurementId: uuid("measurement_id").references(() => measurements.id, {
+    onDelete: "cascade",
+  }),
+  // Optional: the daily report this completion is logged against.
+  reportId: uuid("report_id").references(() => dailyReports.id, {
+    onDelete: "set null",
+  }),
+  createdById: uuid("created_by_id")
+    .notNull()
+    .references(() => contractors.id, { onDelete: "cascade" }),
+  // Free-text status ("Drywall installed", "Framed", or a custom label).
+  statusLabel: text("status_label").notNull(),
+  // A swatch color for the mark, chosen from a small palette per status.
+  color: text("color"),
+  // Freeform geometry in the plan's calibrated pixel space: a single {x,y} for
+  // a pin, or a polygon for an area. Null when measurementId is set.
+  points: jsonb("points"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

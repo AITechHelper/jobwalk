@@ -6,6 +6,9 @@ import { getDb } from "@/lib/db";
 import {
   clients,
   contractors,
+  measurements,
+  planProgressMarks,
+  plans,
   projectAreas,
   projects,
   reportComments,
@@ -16,6 +19,9 @@ import { getContractorByClerkId } from "@/lib/contractor";
 import { loadReportForMember } from "@/lib/report-access";
 import { getOrSeedActivityTypes } from "@/lib/lookups";
 import { readReportBody } from "@/lib/dailyReport";
+import { colorForStatus } from "@/lib/progress";
+import type { Point } from "@/lib/scale";
+import type { SnapshotMark } from "@/components/report/PlanProgressSnapshot";
 import type { WeatherData } from "@/lib/weather";
 import DailyReportEditor from "@/components/report/DailyReportEditor";
 
@@ -95,6 +101,69 @@ export default async function ReportPage({
     .where(eq(reportComments.reportId, id))
     .orderBy(asc(reportComments.createdAt));
 
+  // Progress marks logged against this report, with each mark's geometry
+  // resolved (its own points, or the traced measurement it tags) so the report
+  // can render them over the plan. Grouped by plan.
+  const progressRows = await db
+    .select({
+      statusLabel: planProgressMarks.statusLabel,
+      color: planProgressMarks.color,
+      markPoints: planProgressMarks.points,
+      measurementPoints: measurements.points,
+      measurementIsClosed: measurements.isClosed,
+      planId: plans.id,
+      planName: plans.name,
+      planBlobUrl: plans.blobUrl,
+      planFileType: plans.fileType,
+      planPageNumber: plans.pageNumber,
+      planRenderWidth: plans.renderWidth,
+    })
+    .from(planProgressMarks)
+    .innerJoin(plans, eq(planProgressMarks.planId, plans.id))
+    .leftJoin(measurements, eq(planProgressMarks.measurementId, measurements.id))
+    .where(eq(planProgressMarks.reportId, id))
+    .orderBy(asc(planProgressMarks.createdAt));
+
+  type ProgressPlan = {
+    id: string;
+    name: string;
+    blobUrl: string;
+    fileType: string;
+    pageNumber: number;
+    renderWidth: number | null;
+    marks: SnapshotMark[];
+  };
+  const progressPlans: ProgressPlan[] = [];
+  for (const row of progressRows) {
+    const mPts = row.measurementPoints as Point[] | null;
+    const geom = mPts
+      ? { points: mPts, isClosed: row.measurementIsClosed ?? false }
+      : {
+          points: (row.markPoints as Point[] | null) ?? [],
+          isClosed: ((row.markPoints as Point[] | null) ?? []).length > 2,
+        };
+    if (geom.points.length === 0) continue;
+    let group = progressPlans.find((p) => p.id === row.planId);
+    if (!group) {
+      group = {
+        id: row.planId,
+        name: row.planName,
+        blobUrl: row.planBlobUrl,
+        fileType: row.planFileType,
+        pageNumber: row.planPageNumber,
+        renderWidth: row.planRenderWidth,
+        marks: [],
+      };
+      progressPlans.push(group);
+    }
+    group.marks.push({
+      points: geom.points,
+      isClosed: geom.isClosed,
+      statusLabel: row.statusLabel,
+      color: row.color ?? colorForStatus(row.statusLabel),
+    });
+  }
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       <Link
@@ -126,6 +195,8 @@ export default async function ReportPage({
           businessName: company?.businessName ?? null,
           phone: company?.phone ?? null,
         }}
+        projectId={report.projectId}
+        progressPlans={progressPlans}
         areas={areas}
         crew={projectCrew.map((m) => ({
           id: m.id,

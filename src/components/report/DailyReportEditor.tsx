@@ -1,12 +1,16 @@
 "use client";
 
 import { upload } from "@vercel/blob/client";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import LocalDate from "@/components/LocalDate";
 import Spinner from "@/components/ui/Spinner";
 import WeatherCard from "./WeatherCard";
 import ReportComments from "./ReportComments";
+import PlanProgressSnapshot, {
+  type SnapshotMark,
+} from "./PlanProgressSnapshot";
 import {
   rowTotalHours,
   totalEquipmentHours,
@@ -46,11 +50,23 @@ type ReportData = {
   weather: WeatherData | null;
 };
 
+type ProgressPlan = {
+  id: string;
+  name: string;
+  blobUrl: string;
+  fileType: string;
+  pageNumber: number;
+  renderWidth: number | null;
+  marks: SnapshotMark[];
+};
+
 export default function DailyReportEditor({
   canEdit,
   report,
   project,
   company,
+  projectId,
+  progressPlans,
   areas,
   crew,
   activities,
@@ -61,6 +77,8 @@ export default function DailyReportEditor({
   report: ReportData;
   project: { name: string; siteAddress: string | null; clientName: string | null };
   company: { businessName: string | null; phone: string | null };
+  projectId: string;
+  progressPlans: ProgressPlan[];
   areas: Area[];
   crew: Crew[];
   activities: Activity[];
@@ -199,6 +217,12 @@ export default function DailyReportEditor({
             >
               Edit
             </button>
+            <Link
+              href={`/projects/${projectId}/plans?report=${report.id}`}
+              className="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-brand hover:text-white"
+            >
+              Mark progress
+            </Link>
           </>
         )}
         <button
@@ -327,6 +351,27 @@ export default function DailyReportEditor({
                       ))}
                     </div>
                   </div>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {/* Site progress — what got completed today, shown on the plans */}
+          {progressPlans.length > 0 && (
+            <Section title="Site Progress">
+              <div className="flex flex-col gap-4">
+                {progressPlans.map((p) => (
+                  <PlanProgressSnapshot
+                    key={p.id}
+                    plan={{
+                      name: p.name,
+                      blobUrl: p.blobUrl,
+                      fileType: p.fileType,
+                      pageNumber: p.pageNumber,
+                      renderWidth: p.renderWidth,
+                    }}
+                    marks={p.marks}
+                  />
                 ))}
               </div>
             </Section>

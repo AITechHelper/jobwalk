@@ -3,15 +3,17 @@ import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { plans } from "@/lib/db/schema";
+import { dailyReports, plans } from "@/lib/db/schema";
 import { getContractorByClerkId } from "@/lib/contractor";
 import { loadProjectForMember } from "@/lib/project-access";
 import PlansList from "@/components/takeoff/PlansList";
 
 export default async function PlansPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ report?: string }>;
 }) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
@@ -19,8 +21,18 @@ export default async function PlansPage({
   if (!contractor) redirect("/onboarding");
 
   const { id } = await params;
+  const { report: reportParam } = await searchParams;
   const loaded = await loadProjectForMember(id, contractor.id);
   if (!loaded) notFound();
+
+  let reportContext: { id: string; label: string } | null = null;
+  if (reportParam) {
+    const [r] = await getDb()
+      .select({ id: dailyReports.id, reportDate: dailyReports.reportDate })
+      .from(dailyReports)
+      .where(eq(dailyReports.id, reportParam));
+    if (r && r.id) reportContext = { id: r.id, label: r.reportDate };
+  }
 
   const rows = await getDb()
     .select({
@@ -56,6 +68,7 @@ export default async function PlansPage({
           fileType: p.fileType,
           scaleLabel: p.scaleLabel,
         }))}
+        reportContext={reportContext}
       />
     </div>
   );
