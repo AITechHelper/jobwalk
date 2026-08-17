@@ -254,6 +254,10 @@ export default async function ReportPage({
         photos={photos.map((p) => ({
           id: p.id,
           blobUrl: p.blobUrl,
+          annotatedBlobUrl: p.annotatedBlobUrl,
+          annotation: (p.annotation as
+            | { color: string; width: number; points: { x: number; y: number }[] }[]
+            | null) ?? null,
           areaId: p.areaId,
           caption: p.caption,
         }))}

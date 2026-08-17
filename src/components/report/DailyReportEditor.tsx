@@ -11,6 +11,7 @@ import ReportComments from "./ReportComments";
 import PlanProgressSnapshot, {
   type SnapshotMark,
 } from "./PlanProgressSnapshot";
+import PhotoAnnotator from "./PhotoAnnotator";
 import type { CaptureMerge } from "@/lib/captureMerge";
 import {
   rowTotalHours,
@@ -25,9 +26,12 @@ import type { WeatherData } from "@/lib/weather";
 type Area = { id: string; name: string };
 type Crew = { id: string; name: string; trade: string | null };
 type Activity = { id: string; name: string };
+type Stroke = { color: string; width: number; points: { x: number; y: number }[] };
 type Photo = {
   id: string;
   blobUrl: string;
+  annotatedBlobUrl: string | null;
+  annotation: Stroke[] | null;
   areaId: string | null;
   caption: string | null;
 };
@@ -107,6 +111,7 @@ export default function DailyReportEditor({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [merging, setMerging] = useState(false);
+  const [annotatingPhoto, setAnnotatingPhoto] = useState<Photo | null>(null);
 
   async function remergeCaptures() {
     setMerging(true);
@@ -421,13 +426,22 @@ export default function DailyReportEditor({
                     )}
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                       {group.photos.map((p) => (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          key={p.id}
-                          src={p.blobUrl}
-                          alt={p.caption ?? ""}
-                          className="aspect-square w-full rounded-lg border border-neutral-200 object-cover"
-                        />
+                        <div key={p.id} className="relative">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={p.annotatedBlobUrl ?? p.blobUrl}
+                            alt={p.caption ?? ""}
+                            className="aspect-square w-full rounded-lg border border-neutral-200 object-cover"
+                          />
+                          {canEdit && (
+                            <button
+                              onClick={() => setAnnotatingPhoto(p)}
+                              className="absolute bottom-1 right-1 rounded-md bg-black/60 px-2 py-1 text-xs font-semibold text-white backdrop-blur transition hover:bg-black/80 print:hidden"
+                            >
+                              {p.annotatedBlobUrl ? "Edit markup" : "Annotate"}
+                            </button>
+                          )}
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -543,6 +557,18 @@ export default function DailyReportEditor({
       <div className="print:hidden">
         <ReportComments reportId={report.id} comments={comments} />
       </div>
+
+      {annotatingPhoto && (
+        <PhotoAnnotator
+          reportId={report.id}
+          photo={{
+            id: annotatingPhoto.id,
+            blobUrl: annotatingPhoto.blobUrl,
+            annotation: annotatingPhoto.annotation,
+          }}
+          onClose={() => setAnnotatingPhoto(null)}
+        />
+      )}
 
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 print:hidden">
