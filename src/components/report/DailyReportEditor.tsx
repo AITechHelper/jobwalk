@@ -999,8 +999,15 @@ function DailyReportForm({
           <input
             value={s.reviewerName}
             onChange={(e) => s.setReviewerName(e.target.value)}
+            list="reviewer-team-list"
+            placeholder="Optional — pick from the team or type a name"
             className={`mt-1 ${input}`}
           />
+          <datalist id="reviewer-team-list">
+            {crew.map((c) => (
+              <option key={c.id} value={c.name} />
+            ))}
+          </datalist>
         </label>
       </div>
 

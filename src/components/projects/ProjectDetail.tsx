@@ -44,6 +44,7 @@ export default function ProjectDetail({
     siteAddress: string | null;
     jobType: "commercial" | "residential";
     clientName: string | null;
+    generalContractor: string | null;
     hasCoords: boolean;
   };
   access: ProjectAccess;
@@ -64,6 +65,31 @@ export default function ProjectDetail({
   // Area form
   const [areaName, setAreaName] = useState("");
   const [addingArea, setAddingArea] = useState(false);
+
+  // Default general contractor (pre-fills new daily reports).
+  const [gc, setGc] = useState(project.generalContractor ?? "");
+  const [savingGc, setSavingGc] = useState(false);
+  const [gcSaved, setGcSaved] = useState(false);
+
+  async function saveGc() {
+    setSavingGc(true);
+    setGcSaved(false);
+    setError(null);
+    try {
+      const res = await fetch(`/api/projects/${project.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ generalContractor: gc }),
+      });
+      if (!res.ok) throw new Error();
+      setGcSaved(true);
+      router.refresh();
+    } catch {
+      setError("Couldn't save the general contractor.");
+    } finally {
+      setSavingGc(false);
+    }
+  }
 
   const isCommercial = project.jobType === "commercial";
   const inputClasses =
@@ -225,6 +251,39 @@ export default function ProjectDetail({
           </ul>
         )}
       </section>
+
+      {/* Report defaults — pre-fill values reused on every daily report */}
+      {access.canEdit && (
+        <section className="mt-8">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-white/60">
+            Report defaults
+          </h2>
+          <label className="mt-2 block text-sm text-white/60">
+            Default general contractor
+          </label>
+          <div className="mt-1 flex gap-2">
+            <input
+              value={gc}
+              onChange={(e) => {
+                setGc(e.target.value);
+                setGcSaved(false);
+              }}
+              placeholder="e.g. Turner Construction"
+              className={inputClasses}
+            />
+            <button
+              onClick={saveGc}
+              disabled={savingGc || gc === (project.generalContractor ?? "")}
+              className="shrink-0 rounded-lg border border-white/15 px-3 py-2 text-sm font-semibold text-white/80 transition hover:text-white disabled:opacity-50"
+            >
+              {savingGc ? "Saving…" : gcSaved ? "Saved ✓" : "Save"}
+            </button>
+          </div>
+          <p className="mt-1 text-xs text-white/40">
+            New daily reports start with this GC filled in.
+          </p>
+        </section>
+      )}
 
       {/* Plan takeoff (Part 2) */}
       <section className="mt-8">

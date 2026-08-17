@@ -72,7 +72,9 @@ export async function POST(
       status: "draft",
       jobType: project.jobType,
       reporterName: str(body.reporterName) ?? authed.contractor.name,
-      generalContractor: str(body.generalContractor),
+      // Default the GC from the project record so it isn't retyped each day;
+      // still overridable per report.
+      generalContractor: str(body.generalContractor) ?? project.generalContractor,
       reviewerName: str(body.reviewerName),
       body: emptyReportBody(),
       weather,

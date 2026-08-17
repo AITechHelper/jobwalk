@@ -95,6 +95,7 @@ export default async function ProjectDetailPage({
           siteAddress: project.siteAddress,
           jobType: project.jobType,
           clientName: client?.name ?? null,
+          generalContractor: project.generalContractor,
           hasCoords: project.latitude != null && project.longitude != null,
         }}
         access={access}
