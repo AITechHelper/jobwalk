@@ -68,7 +68,7 @@ export default function SavePdfButton({
       disabled={saving}
       className={
         className ||
-        "flex items-center gap-2 rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-brand hover:text-white disabled:opacity-60"
+        "flex items-center gap-2 rounded-lg border border-white/25 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-brand hover:text-white disabled:opacity-60"
       }
     >
       {saving && <Spinner />}

@@ -95,7 +95,7 @@ export default function ProjectDetail({
 
   const isCommercial = project.jobType === "commercial";
   const inputClasses =
-    "w-full rounded-lg border border-white/10 bg-navy px-3 py-2 text-foreground placeholder-white/40 focus:border-brand focus:outline-none";
+    "w-full rounded-lg border border-white/20 bg-navy px-3 py-2 text-foreground placeholder-white/40 focus:border-brand focus:outline-none";
 
   async function newReport() {
     setCreating(true);
@@ -230,7 +230,7 @@ export default function ProjectDetail({
               <li key={r.id}>
                 <Link
                   href={`/reports/${r.id}`}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-navy/50 px-4 py-3 transition hover:border-brand/50"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-white/20 bg-navy/50 px-4 py-3 transition hover:border-brand/50"
                 >
                   <span className="min-w-0">
                     <span className="block font-medium">
@@ -286,7 +286,7 @@ export default function ProjectDetail({
             <button
               onClick={saveGc}
               disabled={savingGc || gc === (project.generalContractor ?? "")}
-              className="shrink-0 rounded-lg border border-white/15 px-3 py-2 text-sm font-semibold text-white/80 transition hover:text-white disabled:opacity-50"
+              className="shrink-0 rounded-lg border border-white/25 px-3 py-2 text-sm font-semibold text-white/80 transition hover:text-white disabled:opacity-50"
             >
               {savingGc ? "Saving…" : gcSaved ? "Saved ✓" : "Save"}
             </button>
@@ -301,7 +301,7 @@ export default function ProjectDetail({
       <section className="mt-8">
         <Link
           href={`/projects/${project.id}/plans`}
-          className="flex items-center justify-between rounded-2xl border border-white/15 bg-navy/50 px-5 py-4 transition hover:border-brand/50"
+          className="flex items-center justify-between rounded-2xl border border-white/25 bg-navy/50 px-5 py-4 transition hover:border-brand/50"
         >
           <span className="text-lg font-semibold">
             Plan takeoff &amp; measurements
@@ -339,7 +339,7 @@ export default function ProjectDetail({
               <button
                 onClick={addArea}
                 disabled={addingArea || !areaName.trim()}
-                className="shrink-0 rounded-lg border border-white/15 px-3 py-2 text-sm font-semibold text-white/80 transition hover:text-white disabled:opacity-50"
+                className="shrink-0 rounded-lg border border-white/25 px-3 py-2 text-sm font-semibold text-white/80 transition hover:text-white disabled:opacity-50"
               >
                 Add
               </button>
@@ -371,7 +371,7 @@ export default function ProjectDetail({
         </ul>
 
         {access.role === "owner" && (
-          <div className="mt-3 flex flex-col gap-2 rounded-xl border border-white/10 bg-navy/50 p-3">
+          <div className="mt-3 flex flex-col gap-2 rounded-xl border border-white/20 bg-navy/50 p-3">
             <span className="text-xs font-semibold text-white/50">
               Add a teammate by their JobWalk account email
             </span>
@@ -386,7 +386,7 @@ export default function ProjectDetail({
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value as Member["role"])}
-                className="rounded-lg border border-white/10 bg-navy px-3 py-2 text-foreground focus:border-brand focus:outline-none"
+                className="rounded-lg border border-white/20 bg-navy px-3 py-2 text-foreground focus:border-brand focus:outline-none"
               >
                 <option value="foreman">Foreman (can edit)</option>
                 <option value="owner">Owner (can edit)</option>
@@ -407,7 +407,7 @@ export default function ProjectDetail({
 
       {/* Danger zone — owner only */}
       {access.role === "owner" && (
-        <section className="flex flex-col items-start gap-2 border-t border-white/10 pt-6">
+        <section className="flex flex-col items-start gap-2 border-t border-white/20 pt-6">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-white/40">
             Danger zone
           </h2>

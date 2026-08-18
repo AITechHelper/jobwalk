@@ -92,7 +92,7 @@ export default function ProjectsHub({
   }
 
   const inputClasses =
-    "w-full rounded-xl border border-white/15 bg-navy px-4 py-3 text-lg text-foreground placeholder-white/40 focus:border-brand focus:outline-none";
+    "w-full rounded-xl border border-white/25 bg-navy px-4 py-3 text-lg text-foreground placeholder-white/40 focus:border-brand focus:outline-none";
 
   return (
     <div>
@@ -110,7 +110,7 @@ export default function ProjectsHub({
       </div>
 
       {showNew && (
-        <div className="mt-4 flex flex-col gap-4 rounded-2xl border border-white/15 bg-navy/50 p-4">
+        <div className="mt-4 flex flex-col gap-4 rounded-2xl border border-white/25 bg-navy/50 p-4">
           <label className="block">
             <span className="text-sm font-semibold uppercase tracking-wide text-white/60">
               Project name
@@ -151,7 +151,7 @@ export default function ProjectsHub({
                   className={`flex-1 rounded-xl border px-3 py-3 text-base font-semibold capitalize transition ${
                     jobType === t
                       ? "border-brand bg-brand/15 text-white"
-                      : "border-white/15 text-white/70 hover:text-white"
+                      : "border-white/25 text-white/70 hover:text-white"
                   }`}
                 >
                   {t}
@@ -197,7 +197,7 @@ export default function ProjectsHub({
                 type="button"
                 onClick={createClient}
                 disabled={saving || !clientName.trim()}
-                className="shrink-0 rounded-xl border border-white/20 px-4 py-3 text-base font-semibold text-white/85 transition hover:text-white disabled:opacity-50"
+                className="shrink-0 rounded-xl border border-white/35 px-4 py-3 text-base font-semibold text-white/85 transition hover:text-white disabled:opacity-50"
               >
                 Add
               </button>
@@ -218,7 +218,7 @@ export default function ProjectsHub({
       )}
 
       {projects.length === 0 ? (
-        <div className="mt-4 rounded-2xl border border-white/10 bg-navy/50 px-4 py-6 text-center">
+        <div className="mt-4 rounded-2xl border border-white/20 bg-navy/50 px-4 py-6 text-center">
           <p className="text-lg text-white/80">No projects yet.</p>
           <p className="mt-1 text-sm text-white/55">
             Create a project to start recording walkthroughs and daily reports.
@@ -230,7 +230,7 @@ export default function ProjectsHub({
             <li key={p.id}>
               <Link
                 href={`/projects/${p.id}`}
-                className="block rounded-2xl border border-white/15 bg-navy p-4 transition active:scale-[0.99] hover:border-brand/60"
+                className="block rounded-2xl border border-white/25 bg-navy p-4 transition active:scale-[0.99] hover:border-brand/60"
               >
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-lg font-bold">{p.name}</span>

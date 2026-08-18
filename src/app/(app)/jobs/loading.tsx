@@ -12,7 +12,7 @@ export default function JobsLoading() {
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
-            className="h-[68px] animate-pulse rounded-xl border border-white/10 bg-navy"
+            className="h-[68px] animate-pulse rounded-xl border border-white/20 bg-navy"
           />
         ))}
       </div>

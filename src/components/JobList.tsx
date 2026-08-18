@@ -120,7 +120,7 @@ export default function JobList({ jobs }: { jobs: JobListItem[] }) {
               onTouchStart={(e) => onTouchStart(job.id, e)}
               onTouchMove={(e) => onTouchMove(job.id, e)}
               onTouchEnd={() => onTouchEnd(job.id)}
-              className="relative flex items-center justify-between gap-3 border border-white/10 bg-navy p-4 transition-transform"
+              className="relative flex items-center justify-between gap-3 border border-white/20 bg-navy p-4 transition-transform"
               style={{
                 transform: `translateX(${offset}px)`,
                 transition: dragId === job.id ? "none" : "transform 0.2s ease",

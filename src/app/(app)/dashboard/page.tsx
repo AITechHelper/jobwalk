@@ -69,7 +69,7 @@ export default async function DashboardPage() {
           fits with far less scrolling. */}
       <div className="lg:columns-2 lg:gap-5 [&>*]:mb-4 [&>*]:break-inside-avoid lg:[&>*]:mb-5">
         {/* Business overview */}
-        <div className="rounded-2xl border border-white/15 bg-navy p-4">
+        <div className="rounded-2xl border border-white/25 bg-navy p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h1 className="text-2xl font-bold leading-tight">

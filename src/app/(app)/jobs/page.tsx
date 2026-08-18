@@ -49,7 +49,7 @@ export default async function JobsPage({
           name="q"
           defaultValue={search ?? ""}
           placeholder="Search walkthroughs..."
-          className="w-full rounded-xl border border-white/15 bg-navy px-4 py-3.5 text-lg text-foreground placeholder-white/40 focus:border-brand focus:outline-none"
+          className="w-full rounded-xl border border-white/25 bg-navy px-4 py-3.5 text-lg text-foreground placeholder-white/40 focus:border-brand focus:outline-none"
         />
       </form>
 

@@ -255,13 +255,13 @@ export default function DailyReportEditor({
             </button>
             <button
               onClick={startEditing}
-              className="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-brand hover:text-white"
+              className="rounded-lg border border-white/25 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-brand hover:text-white"
             >
               Edit
             </button>
             <Link
               href={`/projects/${projectId}/plans?report=${report.id}`}
-              className="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-brand hover:text-white"
+              className="rounded-lg border border-white/25 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-brand hover:text-white"
             >
               Mark progress
             </Link>
@@ -269,7 +269,7 @@ export default function DailyReportEditor({
         )}
         <button
           onClick={() => window.print()}
-          className="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-brand hover:text-white"
+          className="rounded-lg border border-white/25 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-brand hover:text-white"
         >
           Save PDF
         </button>
@@ -490,7 +490,7 @@ export default function DailyReportEditor({
 
       {/* Capture sessions — multi-contributor recording, outside the sheet */}
       {canEdit && (
-        <div className="mt-4 rounded-2xl border border-white/10 bg-navy/40 p-4 print:hidden">
+        <div className="mt-4 rounded-2xl border border-white/20 bg-navy/40 p-4 print:hidden">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-sm font-bold uppercase tracking-wide text-white/60">
               Capture sessions
@@ -540,7 +540,7 @@ export default function DailyReportEditor({
               <button
                 onClick={remergeCaptures}
                 disabled={merging}
-                className="mt-3 flex items-center gap-2 rounded-lg border border-white/15 px-3 py-2 text-sm font-semibold text-white/80 transition hover:text-white disabled:opacity-50"
+                className="mt-3 flex items-center gap-2 rounded-lg border border-white/25 px-3 py-2 text-sm font-semibold text-white/80 transition hover:text-white disabled:opacity-50"
               >
                 {merging && <Spinner className="h-4 w-4" />}
                 Re-merge sessions
@@ -574,7 +574,7 @@ export default function DailyReportEditor({
 
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 print:hidden">
-          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-navy p-6 text-center">
+          <div className="w-full max-w-sm rounded-2xl border border-white/20 bg-navy p-6 text-center">
             <h2 className="text-lg font-semibold">Delete this report?</h2>
             <p className="mt-2 text-sm text-white/60">
               This permanently removes the daily report and its photos.
@@ -583,7 +583,7 @@ export default function DailyReportEditor({
               <button
                 onClick={() => setConfirmDelete(false)}
                 disabled={deleting}
-                className="flex-1 rounded-lg border border-white/15 px-4 py-3 font-semibold text-white/80 disabled:opacity-50"
+                className="flex-1 rounded-lg border border-white/25 px-4 py-3 font-semibold text-white/80 disabled:opacity-50"
               >
                 Keep
               </button>
@@ -776,7 +776,7 @@ function PhotoManager({
   }
 
   return (
-    <div className="mt-4 flex flex-col gap-2 rounded-xl border border-white/10 bg-navy/50 p-4 print:hidden">
+    <div className="mt-4 flex flex-col gap-2 rounded-xl border border-white/20 bg-navy/50 p-4 print:hidden">
       <span className="text-xs font-semibold uppercase tracking-wide text-white/50">
         Add photos
       </span>
@@ -785,7 +785,7 @@ function PhotoManager({
           <select
             value={areaId}
             onChange={(e) => setAreaId(e.target.value)}
-            className="rounded-lg border border-white/10 bg-navy px-3 py-2 text-sm text-foreground focus:border-brand focus:outline-none"
+            className="rounded-lg border border-white/20 bg-navy px-3 py-2 text-sm text-foreground focus:border-brand focus:outline-none"
           >
             <option value="">No area</option>
             {areas.map((a) => (
@@ -860,7 +860,7 @@ function DailyReportForm({
   const setBody = s.setBody;
 
   const input =
-    "w-full rounded-lg border border-white/10 bg-navy px-3 py-2 text-foreground placeholder-white/40 focus:border-brand focus:outline-none";
+    "w-full rounded-lg border border-white/20 bg-navy px-3 py-2 text-foreground placeholder-white/40 focus:border-brand focus:outline-none";
   const label = "text-xs font-semibold uppercase tracking-wide text-white/50";
 
   // ---- workforce helpers ----
@@ -971,7 +971,7 @@ function DailyReportForm({
                 className={`flex-1 rounded-lg border px-2 py-2 text-xs font-semibold capitalize transition ${
                   s.jobType === t
                     ? "border-brand bg-brand/15 text-white"
-                    : "border-white/10 text-white/60"
+                    : "border-white/20 text-white/60"
                 }`}
               >
                 {t}
@@ -1014,7 +1014,7 @@ function DailyReportForm({
       </div>
 
       {report.weather && (
-        <p className="mt-4 rounded-lg border border-white/10 bg-navy/50 px-3 py-2 text-xs text-white/50">
+        <p className="mt-4 rounded-lg border border-white/20 bg-navy/50 px-3 py-2 text-xs text-white/50">
           Weather auto-pulled ({report.weather.source}): high{" "}
           {report.weather.highF ?? "—"}° / low {report.weather.lowF ?? "—"}° ·{" "}
           {report.weather.precipInches ?? 0}&quot; precip. Not editable.
@@ -1036,7 +1036,7 @@ function DailyReportForm({
           {body.workforce.map((row, i) => (
             <div
               key={i}
-              className="rounded-xl border border-white/10 bg-navy/50 p-3"
+              className="rounded-xl border border-white/20 bg-navy/50 p-3"
             >
               <div className="flex flex-col gap-2">
                 {/* Crew member — pick from list or type a name */}
@@ -1129,13 +1129,13 @@ function DailyReportForm({
                   </label>
                   <div className="flex-1">
                     <span className="text-[11px] text-white/40">Total</span>
-                    <p className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 font-semibold tabular-nums">
+                    <p className="rounded-lg border border-white/20 bg-black/20 px-3 py-2 font-semibold tabular-nums">
                       {rowTotalHours(row)}
                     </p>
                   </div>
                   <button
                     onClick={() => removeWorkforce(i)}
-                    className="rounded-lg border border-white/10 px-3 py-2 text-white/50 hover:text-red-400"
+                    className="rounded-lg border border-white/20 px-3 py-2 text-white/50 hover:text-red-400"
                     aria-label="Remove crew row"
                   >
                     ×
@@ -1200,7 +1200,7 @@ function DailyReportForm({
               </label>
               <button
                 onClick={() => removeEquipment(i)}
-                className="rounded-lg border border-white/10 px-3 py-2 text-white/50 hover:text-red-400"
+                className="rounded-lg border border-white/20 px-3 py-2 text-white/50 hover:text-red-400"
                 aria-label="Remove equipment row"
               >
                 ×
@@ -1285,7 +1285,7 @@ function EventEditor({
   input: string;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-navy/50 p-3">
+    <div className="rounded-xl border border-white/20 bg-navy/50 p-3">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium">{label}</span>
         <div className="flex gap-1">

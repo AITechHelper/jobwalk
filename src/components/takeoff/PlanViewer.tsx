@@ -638,7 +638,7 @@ export default function PlanViewer({
             value={scaleLabel}
             onChange={(e) => selectScale(e.target.value)}
             disabled={!canEdit}
-            className="rounded-lg border border-white/10 bg-navy px-3 py-2 text-foreground focus:border-brand focus:outline-none disabled:opacity-60"
+            className="rounded-lg border border-white/20 bg-navy px-3 py-2 text-foreground focus:border-brand focus:outline-none disabled:opacity-60"
           >
             <option value="">Select…</option>
             {SCALE_OPTIONS.map((o) => (
@@ -650,7 +650,7 @@ export default function PlanViewer({
         </label>
 
         {canEdit && (
-          <div className="flex overflow-hidden rounded-lg border border-white/10">
+          <div className="flex overflow-hidden rounded-lg border border-white/20">
             {(
               [
                 ["segment", "Segment"],
@@ -685,7 +685,7 @@ export default function PlanViewer({
         <div className="ml-auto flex items-center gap-1">
           <button
             onClick={() => setZoom((z) => Math.max(MIN_ZOOM, z / 1.25))}
-            className="h-8 w-8 rounded-lg border border-white/10 text-white/70 hover:text-white"
+            className="h-8 w-8 rounded-lg border border-white/20 text-white/70 hover:text-white"
             aria-label="Zoom out"
           >
             −
@@ -698,13 +698,13 @@ export default function PlanViewer({
               );
               setPan({ x: 0, y: 0 });
             }}
-            className="h-8 rounded-lg border border-white/10 px-2 text-xs text-white/70 hover:text-white"
+            className="h-8 rounded-lg border border-white/20 px-2 text-xs text-white/70 hover:text-white"
           >
             Fit
           </button>
           <button
             onClick={() => setZoom((z) => Math.min(MAX_ZOOM, z * 1.25))}
-            className="h-8 w-8 rounded-lg border border-white/10 text-white/70 hover:text-white"
+            className="h-8 w-8 rounded-lg border border-white/20 text-white/70 hover:text-white"
             aria-label="Zoom in"
           >
             +
@@ -743,7 +743,7 @@ export default function PlanViewer({
           </span>
           <button
             onClick={() => setDraft((d) => d.slice(0, -1))}
-            className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-white/70 hover:text-white"
+            className="rounded-lg border border-white/20 px-3 py-1.5 text-sm text-white/70 hover:text-white"
           >
             Undo point
           </button>
@@ -757,7 +757,7 @@ export default function PlanViewer({
           <button
             onClick={() => finishPolyline(true)}
             disabled={draft.length < 3 || saving}
-            className="rounded-lg border border-white/15 px-3 py-1.5 text-sm font-semibold text-white/80 hover:text-white disabled:opacity-50"
+            className="rounded-lg border border-white/25 px-3 py-1.5 text-sm font-semibold text-white/80 hover:text-white disabled:opacity-50"
           >
             Close loop
           </button>
@@ -769,7 +769,7 @@ export default function PlanViewer({
       {/* Viewer */}
       <div
         ref={viewportRef}
-        className="relative mt-3 h-[60vh] w-full touch-none select-none overflow-hidden rounded-xl border border-white/10 bg-neutral-900"
+        className="relative mt-3 h-[60vh] w-full touch-none select-none overflow-hidden rounded-xl border border-white/20 bg-neutral-900"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -883,7 +883,7 @@ export default function PlanViewer({
 
       {/* Progress status picker — appears after tapping in progress mode */}
       {pendingMark && canEdit && (
-        <div className="mt-3 rounded-xl border border-white/10 bg-navy/70 p-3">
+        <div className="mt-3 rounded-xl border border-white/20 bg-navy/70 p-3">
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold">
               {pendingMark.measurementId
@@ -906,7 +906,7 @@ export default function PlanViewer({
                 key={s.label}
                 disabled={savingMark}
                 onClick={() => saveMark(s.label, s.color)}
-                className="flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-sm font-medium text-white/85 transition hover:border-white/30 disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-full border border-white/20 px-3 py-1.5 text-sm font-medium text-white/85 transition hover:border-white/30 disabled:opacity-50"
               >
                 <span
                   className="h-2.5 w-2.5 rounded-full"
@@ -921,7 +921,7 @@ export default function PlanViewer({
               value={customStatus}
               onChange={(e) => setCustomStatus(e.target.value)}
               placeholder="Custom label…"
-              className="min-w-0 flex-1 rounded-lg border border-white/10 bg-navy px-3 py-2 text-sm focus:border-brand focus:outline-none"
+              className="min-w-0 flex-1 rounded-lg border border-white/20 bg-navy px-3 py-2 text-sm focus:border-brand focus:outline-none"
             />
             <button
               disabled={!customStatus.trim() || savingMark}
@@ -964,7 +964,7 @@ export default function PlanViewer({
                     value={m.label ?? ""}
                     onChange={(e) => renameMeasurement(m.id, e.target.value)}
                     placeholder={`Wall ${i + 1}`}
-                    className="min-w-0 flex-1 rounded border border-transparent bg-transparent px-1 py-0.5 focus:border-white/20 focus:outline-none"
+                    className="min-w-0 flex-1 rounded border border-transparent bg-transparent px-1 py-0.5 focus:border-white/35 focus:outline-none"
                   />
                 ) : (
                   <span className="min-w-0 flex-1">

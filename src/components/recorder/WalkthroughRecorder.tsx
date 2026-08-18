@@ -494,7 +494,7 @@ export default function WalkthroughRecorder({
                   <img
                     src={p.previewUrl}
                     alt={`Photo at ${formatTime(p.offsetSeconds)}`}
-                    className="h-14 w-14 rounded-lg border border-white/20 object-cover"
+                    className="h-14 w-14 rounded-lg border border-white/35 object-cover"
                   />
                   <span className="absolute bottom-0.5 right-0.5 rounded bg-black/70 px-1 font-mono text-[10px] text-white">
                     {formatTime(p.offsetSeconds)}
@@ -534,7 +534,7 @@ export default function WalkthroughRecorder({
   if (phase === "submitting") {
     return (
       <div className="flex flex-col items-center justify-center gap-4 px-4 py-24 text-center">
-        <span className="h-10 w-10 animate-spin rounded-full border-4 border-white/10 border-t-brand" />
+        <span className="h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-brand" />
         <p className="font-semibold">{submitStep}</p>
         <p className="text-sm text-white/60">
           Keep this screen open until it finishes.
@@ -595,7 +595,7 @@ export default function WalkthroughRecorder({
             id="walkthrough-job"
             value={jobId}
             onChange={(e) => setJobId(e.target.value)}
-            className="mt-2 w-full rounded-xl border border-white/15 bg-navy px-4 py-3.5 text-lg text-foreground focus:border-brand focus:outline-none"
+            className="mt-2 w-full rounded-xl border border-white/25 bg-navy px-4 py-3.5 text-lg text-foreground focus:border-brand focus:outline-none"
           >
             <option value="">No project — just this walkthrough</option>
             {jobs.map((j) => (
@@ -637,7 +637,7 @@ export default function WalkthroughRecorder({
       <div className="flex gap-3">
         <button
           onClick={discard}
-          className="flex-1 rounded-xl border border-white/15 px-4 py-4 text-lg font-semibold text-white/80 transition hover:border-red-500 hover:text-red-400"
+          className="flex-1 rounded-xl border border-white/25 px-4 py-4 text-lg font-semibold text-white/80 transition hover:border-red-500 hover:text-red-400"
         >
           Discard
         </button>

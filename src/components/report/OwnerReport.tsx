@@ -138,7 +138,7 @@ export default function OwnerReport({
   }
 
   const inputClasses =
-    "w-full rounded-lg border border-white/10 bg-navy px-3 py-2 text-foreground placeholder-white/40 focus:border-brand focus:outline-none";
+    "w-full rounded-lg border border-white/20 bg-navy px-3 py-2 text-foreground placeholder-white/40 focus:border-brand focus:outline-none";
 
   if (editing) {
     return (
@@ -192,7 +192,7 @@ export default function OwnerReport({
         {draftNotes.map((note, i) => (
           <div
             key={i}
-            className="mt-3 flex gap-3 rounded-xl border border-white/10 bg-navy/50 p-4"
+            className="mt-3 flex gap-3 rounded-xl border border-white/20 bg-navy/50 p-4"
           >
             <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/15 text-xs font-bold text-brand">
               {i + 1}
@@ -220,7 +220,7 @@ export default function OwnerReport({
                         key={photoId}
                         src={photoUrls[photoId]}
                         alt=""
-                        className="aspect-square w-full rounded-md border border-white/10 object-cover"
+                        className="aspect-square w-full rounded-md border border-white/20 object-cover"
                       />
                     ) : null,
                   )}
@@ -251,7 +251,7 @@ export default function OwnerReport({
                     setDraftRecs((prev) => prev.filter((_, j) => j !== i))
                   }
                   aria-label="Remove step"
-                  className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-white/50 transition hover:text-red-400"
+                  className="shrink-0 rounded-lg border border-white/20 px-3 py-2 text-white/50 transition hover:text-red-400"
                 >
                   ×
                 </button>
@@ -281,7 +281,7 @@ export default function OwnerReport({
         </button>
         <button
           onClick={startEditing}
-          className="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-brand hover:text-white"
+          className="rounded-lg border border-white/25 px-4 py-2 text-sm font-semibold text-white/80 transition hover:border-brand hover:text-white"
         >
           Edit
         </button>
@@ -302,7 +302,7 @@ export default function OwnerReport({
             value={assignedProjectId}
             disabled={movingProject}
             onChange={(e) => moveToProject(e.target.value)}
-            className="min-w-0 flex-1 rounded-xl border border-white/15 bg-navy px-4 py-3 text-lg text-foreground focus:border-brand focus:outline-none disabled:opacity-60"
+            className="min-w-0 flex-1 rounded-xl border border-white/25 bg-navy px-4 py-3 text-lg text-foreground focus:border-brand focus:outline-none disabled:opacity-60"
           >
             <option value="">No project — standalone</option>
             {projects.map((p) => (
@@ -333,7 +333,7 @@ export default function OwnerReport({
 
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-navy p-6 text-center">
+          <div className="w-full max-w-sm rounded-2xl border border-white/20 bg-navy p-6 text-center">
             <h2 className="text-lg font-semibold">Delete this report?</h2>
             <p className="mt-2 text-sm text-white/60">
               This permanently removes the walkthrough, its recording, and
@@ -343,7 +343,7 @@ export default function OwnerReport({
               <button
                 onClick={() => setConfirmDelete(false)}
                 disabled={deleting}
-                className="flex-1 rounded-lg border border-white/15 px-4 py-3 font-semibold text-white/80 transition hover:text-white disabled:opacity-50"
+                className="flex-1 rounded-lg border border-white/25 px-4 py-3 font-semibold text-white/80 transition hover:text-white disabled:opacity-50"
               >
                 Keep
               </button>

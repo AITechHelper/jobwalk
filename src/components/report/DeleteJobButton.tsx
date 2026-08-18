@@ -42,7 +42,7 @@ export default function DeleteJobButton({ jobId }: { jobId: string }) {
         <button
           onClick={() => setConfirming(false)}
           disabled={deleting}
-          className="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-white/80 disabled:opacity-50"
+          className="rounded-lg border border-white/25 px-4 py-2 text-sm font-semibold text-white/80 disabled:opacity-50"
         >
           Keep
         </button>

@@ -61,7 +61,7 @@ export default function ReportsPanel({
   }
 
   const controlClasses =
-    "w-full rounded-lg border border-white/10 bg-navy px-3 py-2.5 text-foreground focus:border-brand focus:outline-none";
+    "w-full rounded-lg border border-white/20 bg-navy px-3 py-2.5 text-foreground focus:border-brand focus:outline-none";
 
   return (
     <section>
@@ -78,7 +78,7 @@ export default function ReportsPanel({
               <li key={r.id}>
                 <Link
                   href={`/reports/${r.id}`}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-navy px-4 py-3 transition active:scale-[0.99] hover:border-brand/50"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-white/20 bg-navy px-4 py-3 transition active:scale-[0.99] hover:border-brand/50"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-semibold">{r.projectName}</p>
@@ -106,7 +106,7 @@ export default function ReportsPanel({
       )}
 
       {/* Create & assign */}
-      <div className="mt-3 rounded-xl border border-white/10 bg-navy/50 p-3">
+      <div className="mt-3 rounded-xl border border-white/20 bg-navy/50 p-3">
         <h3 className="text-sm font-bold uppercase tracking-wide text-white/60">
           New report
         </h3>

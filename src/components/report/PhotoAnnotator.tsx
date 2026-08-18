@@ -200,7 +200,7 @@ export default function PhotoAnnotator({
               onClick={() => setColor(c)}
               aria-label={`Color ${c}`}
               className={`h-7 w-7 rounded-full border-2 ${
-                color === c ? "border-white" : "border-white/20"
+                color === c ? "border-white" : "border-white/35"
               }`}
               style={{ backgroundColor: c }}
             />
@@ -213,7 +213,7 @@ export default function PhotoAnnotator({
               onClick={() => setWidth(w)}
               aria-label={`Brush ${w}`}
               className={`flex h-7 w-7 items-center justify-center rounded-lg border ${
-                width === w ? "border-white bg-white/10" : "border-white/20"
+                width === w ? "border-white bg-white/10" : "border-white/35"
               }`}
             >
               <span
@@ -226,14 +226,14 @@ export default function PhotoAnnotator({
         <button
           onClick={undo}
           disabled={strokes.length === 0}
-          className="rounded-lg border border-white/20 px-3 py-1.5 text-sm font-medium text-white/80 disabled:opacity-40"
+          className="rounded-lg border border-white/35 px-3 py-1.5 text-sm font-medium text-white/80 disabled:opacity-40"
         >
           Undo
         </button>
         <button
           onClick={clearAll}
           disabled={strokes.length === 0}
-          className="rounded-lg border border-white/20 px-3 py-1.5 text-sm font-medium text-white/80 disabled:opacity-40"
+          className="rounded-lg border border-white/35 px-3 py-1.5 text-sm font-medium text-white/80 disabled:opacity-40"
         >
           Clear
         </button>

@@ -43,7 +43,7 @@ export default function ReportComments({
         {roots.map((c) => (
           <div
             key={c.id}
-            className="rounded-xl border border-white/10 bg-navy/50 p-3"
+            className="rounded-xl border border-white/20 bg-navy/50 p-3"
           >
             <CommentBody c={c} />
             <button
@@ -54,7 +54,7 @@ export default function ReportComments({
             </button>
 
             {repliesOf(c.id).length > 0 && (
-              <div className="mt-2 flex flex-col gap-2 border-l-2 border-white/10 pl-3">
+              <div className="mt-2 flex flex-col gap-2 border-l-2 border-white/20 pl-3">
                 {repliesOf(c.id).map((r) => (
                   <CommentBody key={r.id} c={r} />
                 ))}
@@ -138,7 +138,7 @@ function CommentForm({
         onChange={(e) => setText(e.target.value)}
         rows={parentId ? 2 : 3}
         placeholder={parentId ? "Write a reply…" : "Add a comment…"}
-        className="w-full rounded-lg border border-white/10 bg-navy px-3 py-2 text-foreground placeholder-white/40 focus:border-brand focus:outline-none"
+        className="w-full rounded-lg border border-white/20 bg-navy px-3 py-2 text-foreground placeholder-white/40 focus:border-brand focus:outline-none"
       />
       {error && <p className="text-sm text-red-400">{error}</p>}
       <button

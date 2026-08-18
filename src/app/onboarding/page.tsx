@@ -52,7 +52,7 @@ export default function OnboardingPage() {
   }
 
   const inputClasses =
-    "w-full rounded-lg border border-white/10 bg-navy px-4 py-3 text-foreground placeholder-white/40 focus:border-brand focus:outline-none";
+    "w-full rounded-lg border border-white/20 bg-navy px-4 py-3 text-foreground placeholder-white/40 focus:border-brand focus:outline-none";
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">

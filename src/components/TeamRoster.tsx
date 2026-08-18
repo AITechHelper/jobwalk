@@ -31,7 +31,7 @@ export default function TeamRoster({ roster }: { roster: RosterMember[] }) {
   const [error, setError] = useState<string | null>(null);
 
   const inputClasses =
-    "w-full rounded-lg border border-white/10 bg-navy px-3 py-2.5 text-foreground placeholder-white/40 focus:border-brand focus:outline-none";
+    "w-full rounded-lg border border-white/20 bg-navy px-3 py-2.5 text-foreground placeholder-white/40 focus:border-brand focus:outline-none";
 
   async function add() {
     if (!email.trim()) return;
@@ -80,7 +80,7 @@ export default function TeamRoster({ roster }: { roster: RosterMember[] }) {
           {roster.map((m) => (
             <li
               key={m.id}
-              className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-navy px-4 py-3"
+              className="flex items-center justify-between gap-3 rounded-xl border border-white/20 bg-navy px-4 py-3"
             >
               <div className="min-w-0">
                 <p className="truncate font-semibold">{m.name}</p>
@@ -110,7 +110,7 @@ export default function TeamRoster({ roster }: { roster: RosterMember[] }) {
         </ul>
       )}
 
-      <div className="mt-3 flex flex-col gap-2 rounded-xl border border-white/10 bg-navy/50 p-3">
+      <div className="mt-3 flex flex-col gap-2 rounded-xl border border-white/20 bg-navy/50 p-3">
         <span className="text-sm font-semibold text-white/60">
           Add a teammate by their JobWalk account email
         </span>
@@ -125,7 +125,7 @@ export default function TeamRoster({ roster }: { roster: RosterMember[] }) {
           <select
             value={role}
             onChange={(e) => setRole(e.target.value as RosterMember["role"])}
-            className="rounded-lg border border-white/10 bg-navy px-3 py-2.5 text-foreground focus:border-brand focus:outline-none"
+            className="rounded-lg border border-white/20 bg-navy px-3 py-2.5 text-foreground focus:border-brand focus:outline-none"
           >
             <option value="foreman">Foreman (can edit)</option>
             <option value="owner">Owner (can edit)</option>

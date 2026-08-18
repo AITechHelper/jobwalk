@@ -36,13 +36,13 @@ export default function AccountScreen({
   }
 
   const rowClasses =
-    "flex w-full items-center justify-between rounded-2xl border border-white/15 bg-navy px-5 py-4 text-lg font-semibold text-white transition active:scale-[0.99] hover:border-brand/60";
+    "flex w-full items-center justify-between rounded-2xl border border-white/25 bg-navy px-5 py-4 text-lg font-semibold text-white transition active:scale-[0.99] hover:border-brand/60";
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       <h1 className="text-3xl font-bold">Account</h1>
 
-      <div className="mt-5 rounded-2xl border border-white/15 bg-navy px-5 py-5">
+      <div className="mt-5 rounded-2xl border border-white/25 bg-navy px-5 py-5">
         <p className="text-2xl font-bold">{name}</p>
         {businessName && (
           <p className="mt-1 text-lg text-white/75">{businessName}</p>
@@ -85,7 +85,7 @@ export default function AccountScreen({
 
       {confirming && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-white/15 bg-navy p-6 text-center">
+          <div className="w-full max-w-sm rounded-2xl border border-white/25 bg-navy p-6 text-center">
             <h2 className="text-xl font-bold">Delete your account?</h2>
             <p className="mt-3 text-base leading-relaxed text-white/75">
               This permanently deletes your account and every project,
@@ -105,7 +105,7 @@ export default function AccountScreen({
               <button
                 onClick={() => setConfirming(false)}
                 disabled={deleting}
-                className="rounded-xl border border-white/20 px-4 py-3.5 text-lg font-semibold text-white/85 transition hover:text-white disabled:opacity-50"
+                className="rounded-xl border border-white/35 px-4 py-3.5 text-lg font-semibold text-white/85 transition hover:text-white disabled:opacity-50"
               >
                 Keep my account
               </button>

@@ -72,7 +72,7 @@ export default function PlansList({
         </p>
       )}
       {canEdit && (
-        <div className="flex flex-col gap-2 rounded-xl border border-white/10 bg-navy/50 p-4">
+        <div className="flex flex-col gap-2 rounded-xl border border-white/20 bg-navy/50 p-4">
           <span className="text-xs font-semibold uppercase tracking-wide text-white/50">
             Upload a plan (PDF or image)
           </span>
@@ -99,7 +99,7 @@ export default function PlansList({
             <li key={p.id}>
               <Link
                 href={`/projects/${projectId}/plans/${p.id}${suffix}`}
-                className="flex items-center justify-between rounded-xl border border-white/10 bg-navy/50 px-4 py-3 transition hover:border-brand/50"
+                className="flex items-center justify-between rounded-xl border border-white/20 bg-navy/50 px-4 py-3 transition hover:border-brand/50"
               >
                 <span className="font-medium">{p.name}</span>
                 <span className="text-xs text-white/50">
