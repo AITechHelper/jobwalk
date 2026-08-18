@@ -209,6 +209,32 @@ export const teamMembers = pgTable("team_members", {
     .notNull(),
 });
 
+// Company roster: the owner's persistent list of teammates who hold their own
+// JobWalk accounts. Unlike `team_members` (free-text crew names for the
+// workforce table) and `project_members` (per-project access grants), this is
+// the account-holder roster the owner manages once on Home, then draws from to
+// staff projects and assign daily reports. `role` is the default access role a
+// teammate gets when added to a project.
+export const teammates = pgTable(
+  "teammates",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    // The business owner who owns this roster.
+    ownerId: uuid("owner_id")
+      .notNull()
+      .references(() => contractors.id, { onDelete: "cascade" }),
+    // The teammate's own contractor account.
+    memberId: uuid("member_id")
+      .notNull()
+      .references(() => contractors.id, { onDelete: "cascade" }),
+    role: projectRole("role").notNull().default("foreman"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [unique().on(t.ownerId, t.memberId)],
+);
+
 // Customizable activity-type list for the workforce table's activity dropdown
 // (Framing, Supervision, Demo, ...). Seeded with defaults on first use.
 export const activityTypes = pgTable(
@@ -245,6 +271,12 @@ export const dailyReports = pgTable("daily_reports", {
   reporterName: text("reporter_name"),
   generalContractor: text("general_contractor"),
   reviewerName: text("reviewer_name"),
+  // The teammate responsible for completing this report. Set when an owner
+  // creates/assigns a report from the Home hub; drives each teammate's
+  // "Assigned to me" queue. Null = unassigned. See lib/team.ts.
+  assignedToId: uuid("assigned_to_id").references(() => contractors.id, {
+    onDelete: "set null",
+  }),
   body: jsonb("body"),
   // Per-contributor attribution for multi-contributor capture: an array of
   // { contractorId, name, sessionJobId, summary } describing whose capture

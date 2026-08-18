@@ -22,6 +22,7 @@ type ReportRow = {
   reportDate: string;
   status: "draft" | "completed";
   reporterName: string | null;
+  assignedToName: string | null;
 };
 
 const ROLE_LABEL: Record<Member["role"], string> = {
@@ -229,12 +230,22 @@ export default function ProjectDetail({
               <li key={r.id}>
                 <Link
                   href={`/reports/${r.id}`}
-                  className="flex items-center justify-between rounded-xl border border-white/10 bg-navy/50 px-4 py-3 transition hover:border-brand/50"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-navy/50 px-4 py-3 transition hover:border-brand/50"
                 >
-                  <span className="font-medium">
-                    <LocalDate iso={`${r.reportDate}T12:00:00Z`} format="long" />
+                  <span className="min-w-0">
+                    <span className="block font-medium">
+                      <LocalDate
+                        iso={`${r.reportDate}T12:00:00Z`}
+                        format="long"
+                      />
+                    </span>
+                    {r.assignedToName && (
+                      <span className="block text-xs text-white/45">
+                        Assigned: {r.assignedToName}
+                      </span>
+                    )}
                   </span>
-                  <span className="flex items-center gap-2 text-xs text-white/50">
+                  <span className="flex shrink-0 items-center gap-2 text-xs text-white/50">
                     {r.reporterName}
                     <span
                       className={`rounded-full px-2 py-0.5 font-semibold ${

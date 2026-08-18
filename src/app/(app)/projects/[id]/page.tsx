@@ -64,8 +64,10 @@ export default async function ProjectDetailPage({
       reportDate: dailyReports.reportDate,
       status: dailyReports.status,
       reporterName: dailyReports.reporterName,
+      assignedToName: contractors.name,
     })
     .from(dailyReports)
+    .leftJoin(contractors, eq(dailyReports.assignedToId, contractors.id))
     .where(eq(dailyReports.projectId, id))
     .orderBy(desc(dailyReports.reportDate), desc(dailyReports.createdAt));
 
@@ -84,7 +86,7 @@ export default async function ProjectDetailPage({
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
-      <Link href="/projects" className="text-base text-white/65 hover:text-brand">
+      <Link href="/dashboard" className="text-base text-white/65 hover:text-brand">
         ← All projects
       </Link>
 

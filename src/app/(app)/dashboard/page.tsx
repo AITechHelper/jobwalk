@@ -1,14 +1,17 @@
 import { auth } from "@clerk/nextjs/server";
 import { desc, eq } from "drizzle-orm";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { clients, projectMembers, projects } from "@/lib/db/schema";
+import { clients, dailyReports, projectMembers, projects } from "@/lib/db/schema";
 import { getContractorByClerkId } from "@/lib/contractor";
+import { getRoster } from "@/lib/team";
 import ProjectsHub from "@/components/projects/ProjectsHub";
+import TeamRoster from "@/components/TeamRoster";
+import ReportsPanel from "@/components/ReportsPanel";
 
-// The front dashboard: the contractor's business at a glance, a big primary
-// action, then their projects. This is the landing screen after sign-in.
+// The front dashboard / management hub: the contractor's business at a glance,
+// their projects, their team roster, and the reports they can create, assign,
+// and pick up. This is the landing screen after sign-in.
 export default async function DashboardPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
@@ -39,9 +42,29 @@ export default async function DashboardPage() {
     .where(eq(clients.contractorId, contractor.id))
     .orderBy(desc(clients.createdAt));
 
+  const roster = await getRoster(contractor.id);
+
+  // Reports assigned to this user, across every project, newest first.
+  const assignedToMe = await db
+    .select({
+      id: dailyReports.id,
+      reportDate: dailyReports.reportDate,
+      status: dailyReports.status,
+      projectName: projects.name,
+    })
+    .from(dailyReports)
+    .innerJoin(projects, eq(dailyReports.projectId, projects.id))
+    .where(eq(dailyReports.assignedToId, contractor.id))
+    .orderBy(desc(dailyReports.reportDate));
+
+  // Projects the user can start a report on (owner/foreman = can edit).
+  const editableProjects = rows
+    .filter((r) => r.role === "owner" || r.role === "foreman")
+    .map((r) => ({ id: r.id, name: r.name }));
+
   return (
-    <div>
-      {/* Business overview card */}
+    <div className="pb-2">
+      {/* Business overview */}
       <div className="mx-auto max-w-2xl px-4 pt-6">
         <div className="rounded-2xl border border-white/15 bg-navy p-5">
           <div className="flex items-start justify-between gap-3">
@@ -69,10 +92,7 @@ export default async function DashboardPage() {
               <div className="flex gap-2">
                 <dt className="text-white/45">Phone</dt>
                 <dd>
-                  <a
-                    href={`tel:${contractor.phone}`}
-                    className="hover:text-white"
-                  >
+                  <a href={`tel:${contractor.phone}`} className="hover:text-white">
                     {contractor.phone}
                   </a>
                 </dd>
@@ -85,13 +105,6 @@ export default async function DashboardPage() {
               </div>
             )}
           </dl>
-
-          <Link
-            href="/record"
-            className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-4 text-lg font-semibold text-white transition active:scale-[0.99] hover:bg-brand/85"
-          >
-            Start a walkthrough
-          </Link>
         </div>
       </div>
 
@@ -106,6 +119,17 @@ export default async function DashboardPage() {
           clientName: r.clientName,
         }))}
         clients={clientRows}
+      />
+
+      {/* Team roster */}
+      <TeamRoster roster={roster} />
+
+      {/* Reports: assigned-to-me + create & assign */}
+      <ReportsPanel
+        assignedToMe={assignedToMe}
+        editableProjects={editableProjects}
+        assignees={roster.map((m) => ({ id: m.memberId, name: m.name }))}
+        myId={contractor.id}
       />
     </div>
   );
