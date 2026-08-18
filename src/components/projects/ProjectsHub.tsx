@@ -95,7 +95,7 @@ export default function ProjectsHub({
     "w-full rounded-xl border border-white/15 bg-navy px-4 py-3 text-lg text-foreground placeholder-white/40 focus:border-brand focus:outline-none";
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6">
+    <div>
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-2xl font-bold">Projects</h2>
         <button
@@ -218,27 +218,27 @@ export default function ProjectsHub({
       )}
 
       {projects.length === 0 ? (
-        <div className="mt-16 text-center">
-          <p className="text-xl text-white/80">No projects yet.</p>
-          <p className="mt-2 text-base text-white/55">
+        <div className="mt-4 rounded-2xl border border-white/10 bg-navy/50 px-4 py-6 text-center">
+          <p className="text-lg text-white/80">No projects yet.</p>
+          <p className="mt-1 text-sm text-white/55">
             Create a project to start recording walkthroughs and daily reports.
           </p>
         </div>
       ) : (
-        <ul className="mt-5 flex flex-col gap-3">
+        <ul className="mt-3 flex flex-col gap-2.5">
           {projects.map((p) => (
             <li key={p.id}>
               <Link
                 href={`/projects/${p.id}`}
-                className="block rounded-2xl border border-white/15 bg-navy p-5 transition active:scale-[0.99] hover:border-brand/60"
+                className="block rounded-2xl border border-white/15 bg-navy p-4 transition active:scale-[0.99] hover:border-brand/60"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-xl font-bold">{p.name}</span>
-                  <span className="shrink-0 rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-white/80">
+                  <span className="text-lg font-bold">{p.name}</span>
+                  <span className="shrink-0 rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-semibold text-white/80">
                     {ROLE_LABEL[p.role]}
                   </span>
                 </div>
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 text-base text-white/65">
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-white/65">
                   <span className="capitalize">{p.jobType}</span>
                   {p.clientName && <span>· {p.clientName}</span>}
                   {p.siteAddress && <span>· {p.siteAddress}</span>}
@@ -251,7 +251,7 @@ export default function ProjectsHub({
 
       <Link
         href="/jobs"
-        className="mt-8 flex items-center justify-center gap-2 text-base font-semibold text-white/60 hover:text-white"
+        className="mt-4 flex items-center justify-center gap-2 text-sm font-semibold text-white/60 hover:text-white"
       >
         View all walkthroughs →
       </Link>

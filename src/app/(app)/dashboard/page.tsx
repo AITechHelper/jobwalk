@@ -63,17 +63,20 @@ export default async function DashboardPage() {
     .map((r) => ({ id: r.id, name: r.name }));
 
   return (
-    <div className="pb-2">
-      {/* Business overview */}
-      <div className="mx-auto max-w-2xl px-4 pt-6">
-        <div className="rounded-2xl border border-white/15 bg-navy p-5">
+    <div className="mx-auto max-w-5xl px-4 py-4">
+      {/* On phones this is one column; on wide screens the cards pack into two
+          balanced columns (break-inside-avoid keeps each card whole) so the hub
+          fits with far less scrolling. */}
+      <div className="lg:columns-2 lg:gap-5 [&>*]:mb-4 [&>*]:break-inside-avoid lg:[&>*]:mb-5">
+        {/* Business overview */}
+        <div className="rounded-2xl border border-white/15 bg-navy p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h1 className="text-2xl font-bold leading-tight">
                 {contractor.businessName}
               </h1>
               {contractor.tradeType && (
-                <p className="mt-1 text-base capitalize text-white/70">
+                <p className="mt-0.5 text-sm capitalize text-white/70">
                   {contractor.tradeType}
                 </p>
               )}
@@ -83,7 +86,7 @@ export default async function DashboardPage() {
             </span>
           </div>
 
-          <dl className="mt-4 flex flex-col gap-1.5 text-base text-white/70">
+          <dl className="mt-3 flex flex-col gap-1 text-sm text-white/70">
             <div className="flex gap-2">
               <dt className="text-white/45">Contact</dt>
               <dd>{contractor.name}</dd>
@@ -106,31 +109,37 @@ export default async function DashboardPage() {
             )}
           </dl>
         </div>
+
+        {/* Projects */}
+        <div>
+          <ProjectsHub
+            projects={rows.map((r) => ({
+              id: r.id,
+              name: r.name,
+              siteAddress: r.siteAddress,
+              jobType: r.jobType,
+              role: r.role,
+              clientName: r.clientName,
+            }))}
+            clients={clientRows}
+          />
+        </div>
+
+        {/* Team roster */}
+        <div>
+          <TeamRoster roster={roster} />
+        </div>
+
+        {/* Reports: assigned-to-me + create & assign */}
+        <div>
+          <ReportsPanel
+            assignedToMe={assignedToMe}
+            editableProjects={editableProjects}
+            assignees={roster.map((m) => ({ id: m.memberId, name: m.name }))}
+            myId={contractor.id}
+          />
+        </div>
       </div>
-
-      {/* Projects */}
-      <ProjectsHub
-        projects={rows.map((r) => ({
-          id: r.id,
-          name: r.name,
-          siteAddress: r.siteAddress,
-          jobType: r.jobType,
-          role: r.role,
-          clientName: r.clientName,
-        }))}
-        clients={clientRows}
-      />
-
-      {/* Team roster */}
-      <TeamRoster roster={roster} />
-
-      {/* Reports: assigned-to-me + create & assign */}
-      <ReportsPanel
-        assignedToMe={assignedToMe}
-        editableProjects={editableProjects}
-        assignees={roster.map((m) => ({ id: m.memberId, name: m.name }))}
-        myId={contractor.id}
-      />
     </div>
   );
 }

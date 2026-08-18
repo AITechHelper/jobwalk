@@ -64,12 +64,12 @@ export default function ReportsPanel({
     "w-full rounded-lg border border-white/10 bg-navy px-3 py-2.5 text-foreground focus:border-brand focus:outline-none";
 
   return (
-    <section className="mx-auto max-w-2xl px-4 py-6">
+    <section>
       <h2 className="text-2xl font-bold">Reports</h2>
 
       {/* Assigned to me */}
       {assignedToMe.length > 0 && (
-        <div className="mt-4">
+        <div className="mt-3">
           <h3 className="text-sm font-bold uppercase tracking-wide text-white/60">
             Assigned to me
           </h3>
@@ -106,7 +106,7 @@ export default function ReportsPanel({
       )}
 
       {/* Create & assign */}
-      <div className="mt-4 rounded-xl border border-white/10 bg-navy/50 p-4">
+      <div className="mt-3 rounded-xl border border-white/10 bg-navy/50 p-3">
         <h3 className="text-sm font-bold uppercase tracking-wide text-white/60">
           New report
         </h3>

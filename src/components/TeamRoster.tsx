@@ -69,14 +69,14 @@ export default function TeamRoster({ roster }: { roster: RosterMember[] }) {
   }
 
   return (
-    <section className="mx-auto max-w-2xl px-4 py-6">
+    <section>
       <h2 className="text-2xl font-bold">Team</h2>
-      <p className="mt-1 text-base text-white/55">
+      <p className="mt-1 text-sm text-white/55">
         Your crew&apos;s JobWalk accounts. Assign them daily reports below.
       </p>
 
       {roster.length > 0 && (
-        <ul className="mt-4 flex flex-col gap-2">
+        <ul className="mt-3 flex flex-col gap-2">
           {roster.map((m) => (
             <li
               key={m.id}
@@ -110,7 +110,7 @@ export default function TeamRoster({ roster }: { roster: RosterMember[] }) {
         </ul>
       )}
 
-      <div className="mt-4 flex flex-col gap-2 rounded-xl border border-white/10 bg-navy/50 p-4">
+      <div className="mt-3 flex flex-col gap-2 rounded-xl border border-white/10 bg-navy/50 p-3">
         <span className="text-sm font-semibold text-white/60">
           Add a teammate by their JobWalk account email
         </span>
