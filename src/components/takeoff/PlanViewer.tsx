@@ -272,7 +272,9 @@ export default function PlanViewer({
   const downRef = useRef<null | { client: { x: number; y: number }; base: Point | null }>(
     null,
   );
-  const segmentRef = useRef<null | { start: Point }>(null);
+  // Anchor of an in-progress segment measurement. State (not a ref) because
+  // the render reads it to draw the draft preview; `live` tracks the endpoint.
+  const [segmentStart, setSegmentStart] = useState<Point | null>(null);
   const suppressRef = useRef(false);
 
   const toBase = useCallback((clientX: number, clientY: number): Point | null => {
@@ -310,7 +312,7 @@ export default function PlanViewer({
 
     if (pointers.current.size === 2) {
       // Two fingers → pinch/pan; abandon any single-finger measure in progress.
-      segmentRef.current = null;
+      setSegmentStart(null);
       panRef.current = null;
       downRef.current = null;
       setLive(null);
@@ -335,7 +337,7 @@ export default function PlanViewer({
     } else if (mode === "segment") {
       const b = toBase(e.clientX, e.clientY);
       if (b) {
-        segmentRef.current = { start: b };
+        setSegmentStart(b);
         setLive(b);
       }
     }
@@ -373,7 +375,7 @@ export default function PlanViewer({
       return;
     }
 
-    if (segmentRef.current) {
+    if (segmentStart) {
       const b = toBase(e.clientX, e.clientY);
       if (b) setLive(b);
     } else if (mode === "polyline" && draft.length > 0) {
@@ -423,9 +425,9 @@ export default function PlanViewer({
     const down = downRef.current;
     downRef.current = null;
 
-    if (segmentRef.current) {
-      const start = segmentRef.current.start;
-      segmentRef.current = null;
+    if (segmentStart) {
+      const start = segmentStart;
+      setSegmentStart(null);
       const end = toBase(e.clientX, e.clientY);
       setLive(null);
       if (end && down) {
@@ -592,8 +594,8 @@ export default function PlanViewer({
   // Derived display values
   // -------------------------------------------------------------------------
   const draftPreview: Point[] =
-    segmentRef.current && live
-      ? [segmentRef.current.start, live]
+    segmentStart && live
+      ? [segmentStart, live]
       : mode === "polyline"
         ? live
           ? [...draft, live]
