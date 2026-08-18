@@ -320,7 +320,9 @@ export default function DailyReportEditor({
             <Field label="Reviewer" value={report.reviewerName} />
           </section>
 
-          {report.weather && <WeatherCard weather={report.weather} />}
+          {report.weather && (
+            <WeatherCard weather={report.weather} reportDate={report.reportDate} />
+          )}
 
           {/* Field Capture — merged narrative + attribution from the crew's
               capture sessions, with their photos. */}

@@ -1,9 +1,17 @@
 import type { WeatherData } from "@/lib/weather";
+import LocalDate from "@/components/LocalDate";
 
 // Read-only weather summary for a daily report. Weather is auto-pulled at
 // creation, never entered by hand — this just displays what was recorded so a
-// rain delay is documented without dispute.
-export default function WeatherCard({ weather }: { weather: WeatherData }) {
+// rain delay is documented without dispute. The report date rides on the card
+// header so the weather is unambiguously tied to the day it documents.
+export default function WeatherCard({
+  weather,
+  reportDate,
+}: {
+  weather: WeatherData;
+  reportDate?: string;
+}) {
   const stat = (label: string, value: string) => (
     <div className="flex flex-col">
       <span className="text-[11px] uppercase tracking-wide text-neutral-400">
@@ -18,9 +26,14 @@ export default function WeatherCard({ weather }: { weather: WeatherData }) {
 
   return (
     <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-      <div className="flex items-baseline justify-between">
+      <div className="flex items-baseline justify-between gap-2">
         <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-brand">
           Weather
+          {reportDate && (
+            <span className="ml-2 font-semibold normal-case tracking-normal text-neutral-800">
+              <LocalDate iso={`${reportDate}T12:00:00Z`} format="long" />
+            </span>
+          )}
         </h3>
         <span className="text-[11px] text-neutral-400">{weather.source}</span>
       </div>

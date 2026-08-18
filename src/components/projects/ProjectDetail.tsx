@@ -6,6 +6,7 @@ import { useState } from "react";
 import JobList, { type JobListItem } from "@/components/JobList";
 import LocalDate from "@/components/LocalDate";
 import Spinner from "@/components/ui/Spinner";
+import DeleteProjectButton from "./DeleteProjectButton";
 import type { ProjectAccess } from "@/lib/project-access";
 
 type Member = {
@@ -392,6 +393,19 @@ export default function ProjectDetail({
           </div>
         )}
       </section>
+
+      {/* Danger zone — owner only */}
+      {access.role === "owner" && (
+        <section className="flex flex-col items-start gap-2 border-t border-white/10 pt-6">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-white/40">
+            Danger zone
+          </h2>
+          <DeleteProjectButton
+            projectId={project.id}
+            projectName={project.name}
+          />
+        </section>
+      )}
     </div>
   );
 }
