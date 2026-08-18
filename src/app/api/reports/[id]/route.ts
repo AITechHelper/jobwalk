@@ -2,16 +2,11 @@ import { del } from "@vercel/blob";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
-import {
-  dailyReports,
-  projectMembers,
-  projects,
-  reportPhotos,
-} from "@/lib/db/schema";
+import { dailyReports, projects, reportPhotos } from "@/lib/db/schema";
 import { requireContractor } from "@/lib/contractor";
 import { loadReportForMember } from "@/lib/report-access";
 import { sanitizeReportBody } from "@/lib/dailyReport";
-import { isAssignable } from "@/lib/team";
+import { teammateBelongsToOwner } from "@/lib/team";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -66,34 +61,26 @@ export async function PATCH(
   if (input.reviewerName !== undefined) updates.reviewerName = str(input.reviewerName);
   if (input.body !== undefined) updates.body = sanitizeReportBody(input.body);
 
-  // Reassign (or clear) the responsible teammate. Validated against the project
-  // owner's roster; assigning also guarantees the teammate can open the report.
-  if (input.assignedToId !== undefined) {
-    if (input.assignedToId === null || input.assignedToId === "") {
-      updates.assignedToId = null;
-    } else if (typeof input.assignedToId === "string") {
+  // Reassign (or clear) the responsible teammate, validated against the project
+  // owner's roster.
+  if (input.assignedTeammateId !== undefined) {
+    if (input.assignedTeammateId === null || input.assignedTeammateId === "") {
+      updates.assignedTeammateId = null;
+    } else if (typeof input.assignedTeammateId === "string") {
       const [proj] = await getDb()
         .select({ ownerId: projects.contractorId })
         .from(projects)
         .where(eq(projects.id, loaded.report.projectId));
       if (
         !proj ||
-        !(await isAssignable(proj.ownerId, input.assignedToId))
+        !(await teammateBelongsToOwner(proj.ownerId, input.assignedTeammateId))
       ) {
         return NextResponse.json(
           { error: "You can only assign reports to teammates." },
           { status: 400 },
         );
       }
-      updates.assignedToId = input.assignedToId;
-      await getDb()
-        .insert(projectMembers)
-        .values({
-          projectId: loaded.report.projectId,
-          contractorId: input.assignedToId,
-          role: "foreman",
-        })
-        .onConflictDoNothing();
+      updates.assignedTeammateId = input.assignedTeammateId;
     }
   }
 

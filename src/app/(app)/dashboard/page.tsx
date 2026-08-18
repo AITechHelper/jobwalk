@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { desc, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { clients, dailyReports, projectMembers, projects } from "@/lib/db/schema";
+import { clients, projectMembers, projects } from "@/lib/db/schema";
 import { getContractorByClerkId } from "@/lib/contractor";
 import { getRoster } from "@/lib/team";
 import ProjectsHub from "@/components/projects/ProjectsHub";
@@ -43,19 +43,6 @@ export default async function DashboardPage() {
     .orderBy(desc(clients.createdAt));
 
   const roster = await getRoster(contractor.id);
-
-  // Reports assigned to this user, across every project, newest first.
-  const assignedToMe = await db
-    .select({
-      id: dailyReports.id,
-      reportDate: dailyReports.reportDate,
-      status: dailyReports.status,
-      projectName: projects.name,
-    })
-    .from(dailyReports)
-    .innerJoin(projects, eq(dailyReports.projectId, projects.id))
-    .where(eq(dailyReports.assignedToId, contractor.id))
-    .orderBy(desc(dailyReports.reportDate));
 
   // Projects the user can start a report on (owner/foreman = can edit).
   const editableProjects = rows
@@ -133,10 +120,12 @@ export default async function DashboardPage() {
         {/* Reports: assigned-to-me + create & assign */}
         <div>
           <ReportsPanel
-            assignedToMe={assignedToMe}
             editableProjects={editableProjects}
-            assignees={roster.map((m) => ({ id: m.memberId, name: m.name }))}
-            myId={contractor.id}
+            assignees={roster.map((m) => ({
+              id: m.id,
+              name: m.name,
+              role: m.role,
+            }))}
           />
         </div>
       </div>

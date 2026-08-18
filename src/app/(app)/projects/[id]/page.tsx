@@ -10,6 +10,7 @@ import {
   jobs,
   projectAreas,
   projectMembers,
+  teammates,
 } from "@/lib/db/schema";
 import { getContractorByClerkId } from "@/lib/contractor";
 import { loadProjectForMember } from "@/lib/project-access";
@@ -64,10 +65,10 @@ export default async function ProjectDetailPage({
       reportDate: dailyReports.reportDate,
       status: dailyReports.status,
       reporterName: dailyReports.reporterName,
-      assignedToName: contractors.name,
+      assignedToName: teammates.name,
     })
     .from(dailyReports)
-    .leftJoin(contractors, eq(dailyReports.assignedToId, contractors.id))
+    .leftJoin(teammates, eq(dailyReports.assignedTeammateId, teammates.id))
     .where(eq(dailyReports.projectId, id))
     .orderBy(desc(dailyReports.reportDate), desc(dailyReports.createdAt));
 

@@ -1,45 +1,46 @@
 import { and, eq } from "drizzle-orm";
 import { getDb } from "./db";
-import { contractors, teammates } from "./db/schema";
+import { teammates } from "./db/schema";
 
 export type RosterEntry = {
-  id: string; // teammates row id
-  memberId: string; // the teammate's contractor account id
+  id: string;
   name: string;
-  email: string;
-  role: "owner" | "foreman" | "gc" | "client";
+  email: string | null;
+  role: string; // "gc" | "contractor" | "client"
+  linked: boolean; // true once a JobWalk account exists for this email
 };
 
-// The owner's company roster: every teammate they've added, with the
-// teammate's account details. Newest first.
+// The owner's company roster, oldest first (stable order).
 export async function getRoster(ownerId: string): Promise<RosterEntry[]> {
   const rows = await getDb()
     .select({
       id: teammates.id,
-      memberId: teammates.memberId,
-      name: contractors.name,
-      email: contractors.email,
+      name: teammates.name,
+      email: teammates.email,
       role: teammates.role,
+      memberId: teammates.memberId,
     })
     .from(teammates)
-    .innerJoin(contractors, eq(teammates.memberId, contractors.id))
     .where(eq(teammates.ownerId, ownerId))
     .orderBy(teammates.createdAt);
-  return rows;
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    email: r.email,
+    role: r.role,
+    linked: r.memberId != null,
+  }));
 }
 
-// Can `candidateId` be assigned work by `ownerId`? True for the owner
-// themselves or anyone on their roster. Used to validate report assignment.
-export async function isAssignable(
+// Does teammate `teammateId` belong to `ownerId`'s roster? Used to validate
+// report assignment.
+export async function teammateBelongsToOwner(
   ownerId: string,
-  candidateId: string,
+  teammateId: string,
 ): Promise<boolean> {
-  if (candidateId === ownerId) return true;
   const [row] = await getDb()
     .select({ id: teammates.id })
     .from(teammates)
-    .where(
-      and(eq(teammates.ownerId, ownerId), eq(teammates.memberId, candidateId)),
-    );
+    .where(and(eq(teammates.id, teammateId), eq(teammates.ownerId, ownerId)));
   return Boolean(row);
 }

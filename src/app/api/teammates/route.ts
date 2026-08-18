@@ -7,7 +7,7 @@ import {
 } from "@/lib/contractor";
 import { getRoster } from "@/lib/team";
 
-const ROLES = ["owner", "foreman", "gc", "client"] as const;
+const ROLES = ["gc", "contractor", "client"] as const;
 type Role = (typeof ROLES)[number];
 
 // GET — the owner's company roster.
@@ -23,7 +23,9 @@ export async function GET() {
   return NextResponse.json({ roster });
 }
 
-// POST — add a teammate to the roster by their JobWalk account email.
+// POST — add a teammate by typed name + email + role. No account required; if a
+// JobWalk account already exists for that email, link it now (otherwise it gets
+// linked when they sign up — see the onboarding route).
 export async function POST(req: Request) {
   const authed = await requireContractor();
   if (!authed.ok) {
@@ -32,55 +34,42 @@ export async function POST(req: Request) {
       { status: authed.status },
     );
   }
-  const owner = authed.contractor;
 
   const body = (await req.json().catch(() => ({}))) as {
+    name?: unknown;
     email?: unknown;
     role?: unknown;
   };
-  const email = typeof body.email === "string" ? body.email.trim() : "";
-  if (!email) {
-    return NextResponse.json({ error: "Email is required" }, { status: 400 });
+  const name = typeof body.name === "string" ? body.name.trim() : "";
+  if (!name) {
+    return NextResponse.json({ error: "Name is required" }, { status: 400 });
   }
+  const email = typeof body.email === "string" ? body.email.trim() : "";
   const role: Role = ROLES.includes(body.role as Role)
     ? (body.role as Role)
-    : "foreman";
+    : "contractor";
 
-  const member = await getContractorByEmail(email);
-  if (!member) {
-    return NextResponse.json(
-      {
-        error:
-          "No JobWalk account uses that email yet. Ask them to sign up first, then add them.",
-      },
-      { status: 404 },
-    );
-  }
-  if (member.id === owner.id) {
-    return NextResponse.json(
-      { error: "That's your own account." },
-      { status: 400 },
-    );
-  }
+  // Link to an existing account if this email already has one.
+  const existing = email ? await getContractorByEmail(email) : null;
 
-  // Idempotent: onConflictDoUpdate keeps the row and refreshes the role if the
-  // teammate is already on the roster, so re-adding never errors.
   const [row] = await getDb()
     .insert(teammates)
-    .values({ ownerId: owner.id, memberId: member.id, role })
-    .onConflictDoUpdate({
-      target: [teammates.ownerId, teammates.memberId],
-      set: { role },
+    .values({
+      ownerId: authed.contractor.id,
+      name,
+      email: email || null,
+      role,
+      memberId: existing?.id ?? null,
     })
     .returning();
 
   return NextResponse.json({
     member: {
       id: row.id,
-      memberId: member.id,
-      name: member.name,
-      email: member.email,
-      role,
+      name: row.name,
+      email: row.email,
+      role: row.role,
+      linked: row.memberId != null,
     },
   });
 }

@@ -209,31 +209,32 @@ export const teamMembers = pgTable("team_members", {
     .notNull(),
 });
 
-// Company roster: the owner's persistent list of teammates who hold their own
-// JobWalk accounts. Unlike `team_members` (free-text crew names for the
-// workforce table) and `project_members` (per-project access grants), this is
-// the account-holder roster the owner manages once on Home, then draws from to
-// staff projects and assign daily reports. `role` is the default access role a
-// teammate gets when added to a project.
-export const teammates = pgTable(
-  "teammates",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    // The business owner who owns this roster.
-    ownerId: uuid("owner_id")
-      .notNull()
-      .references(() => contractors.id, { onDelete: "cascade" }),
-    // The teammate's own contractor account.
-    memberId: uuid("member_id")
-      .notNull()
-      .references(() => contractors.id, { onDelete: "cascade" }),
-    role: projectRole("role").notNull().default("foreman"),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
-  },
-  (t) => [unique().on(t.ownerId, t.memberId)],
-);
+// Company roster: the owner types each teammate's name, email, and role
+// (gc / contractor / client). No account is required to add someone — the name
+// and email are just typed in. `memberId` links to a JobWalk account when one
+// exists for that email (set at add time, or backfilled when the teammate later
+// signs up); it's the hook for future account-aware features. Distinct from
+// `team_members` (free-text crew for the workforce table) and `project_members`
+// (per-project access grants).
+export const teammates = pgTable("teammates", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  // The business owner who owns this roster.
+  ownerId: uuid("owner_id")
+    .notNull()
+    .references(() => contractors.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  email: text("email"),
+  // "gc" | "contractor" | "client" — free text so it isn't tied to the
+  // project_role enum used for access control.
+  role: text("role").notNull().default("contractor"),
+  // Linked JobWalk account for this email, if any (nullable).
+  memberId: uuid("member_id").references(() => contractors.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
 
 // Customizable activity-type list for the workforce table's activity dropdown
 // (Framing, Supervision, Demo, ...). Seeded with defaults on first use.
@@ -271,12 +272,13 @@ export const dailyReports = pgTable("daily_reports", {
   reporterName: text("reporter_name"),
   generalContractor: text("general_contractor"),
   reviewerName: text("reviewer_name"),
-  // The teammate responsible for completing this report. Set when an owner
-  // creates/assigns a report from the Home hub; drives each teammate's
-  // "Assigned to me" queue. Null = unassigned. See lib/team.ts.
-  assignedToId: uuid("assigned_to_id").references(() => contractors.id, {
-    onDelete: "set null",
-  }),
+  // The roster teammate responsible for this report (who it's assigned to).
+  // Set when an owner creates/assigns a report from the Home hub. Null =
+  // unassigned. See lib/team.ts.
+  assignedTeammateId: uuid("assigned_teammate_id").references(
+    () => teammates.id,
+    { onDelete: "set null" },
+  ),
   body: jsonb("body"),
   // Per-contributor attribution for multi-contributor capture: an array of
   // { contractorId, name, sessionJobId, summary } describing whose capture

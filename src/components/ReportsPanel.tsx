@@ -1,40 +1,33 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import LocalDate from "@/components/LocalDate";
 import Spinner from "@/components/ui/Spinner";
 
-type AssignedReport = {
-  id: string;
-  reportDate: string;
-  status: "draft" | "completed";
-  projectName: string;
-};
 type EditableProject = { id: string; name: string };
-type Assignee = { id: string; name: string };
+type Assignee = { id: string; name: string; role: string };
 
-// Home-hub reports: the caller's "Assigned to me" queue, plus a create-and-
-// assign form so an owner can spin up a daily report for a project and hand it
-// to a teammate to complete.
+const ROLE_LABEL: Record<string, string> = {
+  gc: "GC",
+  contractor: "Contractor",
+  client: "Client",
+};
+
+// Home-hub reports: create a daily report for a project and assign it to a
+// roster teammate (who's responsible). The assignee is stamped on the report.
 export default function ReportsPanel({
-  assignedToMe,
   editableProjects,
   assignees,
-  myId,
 }: {
-  assignedToMe: AssignedReport[];
   editableProjects: EditableProject[];
   assignees: Assignee[];
-  myId: string;
 }) {
   const router = useRouter();
   const today = new Date().toISOString().slice(0, 10);
 
   const [projectId, setProjectId] = useState(editableProjects[0]?.id ?? "");
   const [reportDate, setReportDate] = useState(today);
-  const [assignedToId, setAssignedToId] = useState(myId);
+  const [assignedTeammateId, setAssignedTeammateId] = useState("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,7 +41,7 @@ export default function ReportsPanel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           reportDate,
-          assignedToId: assignedToId || undefined,
+          assignedTeammateId: assignedTeammateId || undefined,
         }),
       });
       const data = await res.json();
@@ -67,45 +60,6 @@ export default function ReportsPanel({
     <section>
       <h2 className="text-2xl font-bold">Reports</h2>
 
-      {/* Assigned to me */}
-      {assignedToMe.length > 0 && (
-        <div className="mt-3">
-          <h3 className="text-sm font-bold uppercase tracking-wide text-white/60">
-            Assigned to me
-          </h3>
-          <ul className="mt-2 flex flex-col gap-2">
-            {assignedToMe.map((r) => (
-              <li key={r.id}>
-                <Link
-                  href={`/reports/${r.id}`}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-white/20 bg-navy px-4 py-3 transition active:scale-[0.99] hover:border-brand/50"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold">{r.projectName}</p>
-                    <p className="text-sm text-white/50">
-                      <LocalDate
-                        iso={`${r.reportDate}T12:00:00Z`}
-                        format="long"
-                      />
-                    </p>
-                  </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      r.status === "completed"
-                        ? "bg-green-500/15 text-green-400"
-                        : "bg-white/10 text-white/60"
-                    }`}
-                  >
-                    {r.status === "completed" ? "Completed" : "Draft"}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Create & assign */}
       <div className="mt-3 rounded-xl border border-white/20 bg-navy/50 p-3">
         <h3 className="text-sm font-bold uppercase tracking-wide text-white/60">
           New report
@@ -144,17 +98,17 @@ export default function ReportsPanel({
               <label className="block flex-1">
                 <span className="text-sm text-white/60">Assign to</span>
                 <select
-                  value={assignedToId}
-                  onChange={(e) => setAssignedToId(e.target.value)}
+                  value={assignedTeammateId}
+                  onChange={(e) => setAssignedTeammateId(e.target.value)}
                   className={`mt-1 ${controlClasses}`}
                 >
-                  <option value={myId}>Me</option>
+                  <option value="">Unassigned</option>
                   {assignees.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.name}
+                      {ROLE_LABEL[a.role] ? ` (${ROLE_LABEL[a.role]})` : ""}
                     </option>
                   ))}
-                  <option value="">Unassigned</option>
                 </select>
               </label>
             </div>
