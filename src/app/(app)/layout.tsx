@@ -1,12 +1,11 @@
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import BottomNav from "@/components/BottomNav";
+import NavDrawer from "@/components/NavDrawer";
 import { getContractorByClerkId } from "@/lib/contractor";
 
-// Two-letter initials for the account chip in the header. Falls back to the
-// first letter of the business name, then a person glyph, so the chip is never
-// blank.
+// Two-letter initials for the account chip in the menu. Falls back to the
+// first letter of the business name, then a person glyph, so it's never blank.
 function initialsFrom(name: string | null, business: string | null): string {
   const source = (name ?? business ?? "").trim();
   if (!source) return "•";
@@ -51,19 +50,17 @@ export default async function AppLayout({
           Job<span className="text-brand">Walker</span>
         </Link>
 
-        {/* Account, right */}
-        <Link
-          href="/account"
-          aria-label="Account"
-          className="flex h-10 w-10 shrink-0 items-center justify-center justify-self-end rounded-full border border-white/25 bg-white/10 text-sm font-bold text-white transition active:scale-95 hover:border-brand/60"
-        >
-          {initials}
-        </Link>
+        {/* Menu, right */}
+        <NavDrawer
+          businessName={contractor?.businessName ?? null}
+          email={contractor?.email ?? null}
+          initials={initials}
+        />
       </header>
 
-      <main className="flex-1 pb-28">{children}</main>
-
-      <BottomNav />
+      <main className="flex-1 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
+        {children}
+      </main>
     </div>
   );
 }

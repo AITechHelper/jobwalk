@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { desc, eq } from "drizzle-orm";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { clients, projectMembers, projects } from "@/lib/db/schema";
@@ -69,9 +70,30 @@ export default async function DashboardPage() {
                   </p>
                 )}
               </div>
-              <span className="shrink-0 rounded-full bg-brand/15 px-3 py-1 text-sm font-semibold text-brand">
-                {rows.length} {rows.length === 1 ? "project" : "projects"}
-              </span>
+              <div className="flex shrink-0 flex-col items-end gap-2">
+                <span className="rounded-full bg-brand/15 px-3 py-1 text-sm font-semibold text-brand">
+                  {rows.length} {rows.length === 1 ? "project" : "projects"}
+                </span>
+                <Link
+                  href="/org"
+                  className="flex items-center gap-1 text-sm font-semibold text-white/60 transition hover:text-white"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-4 w-4"
+                    aria-hidden
+                  >
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                  </svg>
+                  Edit
+                </Link>
+              </div>
             </div>
 
             <dl className="mt-4 flex flex-col gap-1.5 text-sm text-white/70">
