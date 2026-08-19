@@ -400,27 +400,35 @@ export default function DailyReportEditor({
             </Section>
           )}
 
-          {/* Workforce */}
-          <Section title="Workforce">
+          {/* Workforce — who was on the job that day + their hours */}
+          <Section title="Crew on site">
             {report.body.workforce.length === 0 ? (
               <Empty>No crew logged.</Empty>
             ) : (
-              <ResourceTable
-                rows={report.body.workforce.map((r) => ({
-                  name: r.name || "—",
-                  meta: [
-                    r.activity,
-                    isCommercial && r.areaId ? areaName(r.areaId) : null,
-                  ]
-                    .filter(Boolean)
-                    .join(" · "),
-                  notes: r.notes,
-                  qty: r.quantity,
-                  hours: r.hours,
-                  total: rowTotalHours(r),
-                }))}
-                total={workforceTotal}
-              />
+              <>
+                <p className="mb-2 text-xs text-neutral-400">
+                  {report.body.workforce.length}{" "}
+                  {report.body.workforce.length === 1 ? "person" : "people"} on
+                  site · {workforceTotal} hrs total
+                </p>
+                <ResourceTable
+                  mode="hours"
+                  rows={report.body.workforce.map((r) => ({
+                    name: r.name || "—",
+                    meta: [
+                      r.activity,
+                      isCommercial && r.areaId ? areaName(r.areaId) : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · "),
+                    notes: r.notes,
+                    qty: r.quantity,
+                    hours: r.hours,
+                    total: rowTotalHours(r),
+                  }))}
+                  total={workforceTotal}
+                />
+              </>
             )}
           </Section>
 
@@ -759,6 +767,7 @@ function Empty({ children }: { children: React.ReactNode }) {
 function ResourceTable({
   rows,
   total,
+  mode = "full",
 }: {
   rows: {
     name: string;
@@ -769,16 +778,25 @@ function ResourceTable({
     total: number;
   }[];
   total: number;
+  // "hours" = per-person crew log (Name | Hours). "full" = Qty/Hrs/Total (equip).
+  mode?: "full" | "hours";
 }) {
+  const hoursOnly = mode === "hours";
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-neutral-400">
             <th className="pb-1 font-semibold">Name</th>
-            <th className="pb-1 text-right font-semibold">Qty</th>
-            <th className="pb-1 text-right font-semibold">Hrs</th>
-            <th className="pb-1 text-right font-semibold">Total</th>
+            {hoursOnly ? (
+              <th className="pb-1 text-right font-semibold">Hours</th>
+            ) : (
+              <>
+                <th className="pb-1 text-right font-semibold">Qty</th>
+                <th className="pb-1 text-right font-semibold">Hrs</th>
+                <th className="pb-1 text-right font-semibold">Total</th>
+              </>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -795,17 +813,28 @@ function ResourceTable({
                   </span>
                 )}
               </td>
-              <td className="py-1.5 text-right tabular-nums">{r.qty}</td>
-              <td className="py-1.5 text-right tabular-nums">{r.hours}</td>
-              <td className="py-1.5 text-right font-semibold tabular-nums">
-                {r.total}
-              </td>
+              {hoursOnly ? (
+                <td className="py-1.5 text-right font-semibold tabular-nums">
+                  {r.total}
+                </td>
+              ) : (
+                <>
+                  <td className="py-1.5 text-right tabular-nums">{r.qty}</td>
+                  <td className="py-1.5 text-right tabular-nums">{r.hours}</td>
+                  <td className="py-1.5 text-right font-semibold tabular-nums">
+                    {r.total}
+                  </td>
+                </>
+              )}
             </tr>
           ))}
         </tbody>
         <tfoot>
           <tr className="border-t-2 border-neutral-200">
-            <td colSpan={3} className="pt-1.5 text-right font-semibold">
+            <td
+              colSpan={hoursOnly ? 1 : 3}
+              className="pt-1.5 text-right font-semibold"
+            >
               Total hours
             </td>
             <td className="pt-1.5 text-right font-bold tabular-nums">{total}</td>
@@ -1275,10 +1304,10 @@ function DailyReportForm({
         </p>
       )}
 
-      {/* Workforce */}
+      {/* Crew on site — who was on the job + their hours */}
       <div className="mt-6">
         <div className="flex items-center justify-between">
-          <span className={label}>Workforce</span>
+          <span className={label}>Crew on site</span>
           <button
             onClick={addWorkforce}
             className="text-sm font-semibold text-brand hover:text-brand/80"
@@ -1357,36 +1386,23 @@ function DailyReportForm({
                 )}
                 <div className="flex items-end gap-2">
                   <label className="flex-1">
-                    <span className="text-[11px] text-white/40">Qty</span>
-                    <input
-                      type="number"
-                      min={0}
-                      value={row.quantity}
-                      onChange={(e) =>
-                        updateWorkforce(i, { quantity: Number(e.target.value) })
-                      }
-                      className={input}
-                    />
-                  </label>
-                  <label className="flex-1">
-                    <span className="text-[11px] text-white/40">Hrs each</span>
+                    <span className="text-[11px] text-white/40">
+                      Hours on site
+                    </span>
                     <input
                       type="number"
                       min={0}
                       step="0.5"
                       value={row.hours}
                       onChange={(e) =>
-                        updateWorkforce(i, { hours: Number(e.target.value) })
+                        updateWorkforce(i, {
+                          hours: Number(e.target.value),
+                          quantity: 1,
+                        })
                       }
                       className={input}
                     />
                   </label>
-                  <div className="flex-1">
-                    <span className="text-[11px] text-white/40">Total</span>
-                    <p className="rounded-lg border border-white/20 bg-black/20 px-3 py-2 font-semibold tabular-nums">
-                      {rowTotalHours(row)}
-                    </p>
-                  </div>
                   <button
                     onClick={() => removeWorkforce(i)}
                     className="rounded-lg border border-white/20 px-3 py-2 text-white/50 hover:text-red-400"
