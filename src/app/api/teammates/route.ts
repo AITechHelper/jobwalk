@@ -7,7 +7,7 @@ import {
 } from "@/lib/contractor";
 import { getRoster } from "@/lib/team";
 
-const ROLES = ["gc", "contractor", "client"] as const;
+const ROLES = ["gc", "contractor", "subcontractor", "crew", "client"] as const;
 type Role = (typeof ROLES)[number];
 
 // GET — the owner's company roster.

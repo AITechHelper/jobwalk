@@ -10,6 +10,8 @@ type Assignee = { id: string; name: string; role: string };
 const ROLE_LABEL: Record<string, string> = {
   gc: "GC",
   contractor: "Contractor",
+  subcontractor: "Sub Contractor",
+  crew: "Crew Member",
   client: "Client",
 };
 

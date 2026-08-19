@@ -15,6 +15,8 @@ export type RosterMember = {
 const ROLE_LABEL: Record<string, string> = {
   gc: "GC",
   contractor: "Contractor",
+  subcontractor: "Sub Contractor",
+  crew: "Crew Member",
   client: "Client",
 };
 
@@ -143,6 +145,8 @@ export default function TeamRoster({ roster }: { roster: RosterMember[] }) {
           >
             <option value="gc">GC</option>
             <option value="contractor">Contractor</option>
+            <option value="subcontractor">Sub Contractor</option>
+            <option value="crew">Crew Member</option>
             <option value="client">Client</option>
           </select>
           <button
