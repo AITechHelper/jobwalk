@@ -14,6 +14,7 @@ import {
   projectAreas,
   projects,
   reportComments,
+  reportFiles,
   reportPhotos,
   teamMembers,
 } from "@/lib/db/schema";
@@ -97,6 +98,18 @@ export default async function ReportPage({
     .from(reportPhotos)
     .where(eq(reportPhotos.reportId, id))
     .orderBy(asc(reportPhotos.createdAt));
+
+  const files = await db
+    .select()
+    .from(reportFiles)
+    .where(eq(reportFiles.reportId, id))
+    .orderBy(asc(reportFiles.createdAt));
+
+  // Who created the report (STACK "Created by").
+  const [creator] = await db
+    .select({ name: contractors.name })
+    .from(contractors)
+    .where(eq(contractors.id, report.createdById));
 
   const comments = await db
     .select()
@@ -222,6 +235,9 @@ export default async function ReportPage({
           reporterName: report.reporterName,
           generalContractor: report.generalContractor,
           reviewerName: report.reviewerName,
+          dateApproved: report.dateApproved,
+          createdByName: creator?.name ?? null,
+          createdAt: report.createdAt.toISOString(),
           body: readReportBody(report.body),
           weather: (report.weather as WeatherData | null) ?? null,
         }}
@@ -260,6 +276,12 @@ export default async function ReportPage({
             | null) ?? null,
           areaId: p.areaId,
           caption: p.caption,
+        }))}
+        files={files.map((f) => ({
+          id: f.id,
+          name: f.name,
+          blobUrl: f.blobUrl,
+          contentType: f.contentType,
         }))}
         comments={comments.map((c) => ({
           id: c.id,

@@ -59,6 +59,16 @@ export async function PATCH(
   if (input.generalContractor !== undefined)
     updates.generalContractor = str(input.generalContractor);
   if (input.reviewerName !== undefined) updates.reviewerName = str(input.reviewerName);
+  if (input.dateApproved !== undefined) {
+    if (input.dateApproved === null || input.dateApproved === "") {
+      updates.dateApproved = null;
+    } else if (
+      typeof input.dateApproved === "string" &&
+      DATE_RE.test(input.dateApproved)
+    ) {
+      updates.dateApproved = input.dateApproved;
+    }
+  }
   if (input.body !== undefined) updates.body = sanitizeReportBody(input.body);
 
   // Reassign (or clear) the responsible teammate, validated against the project

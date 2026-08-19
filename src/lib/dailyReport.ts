@@ -12,6 +12,7 @@ export type WorkforceRow = {
   quantity: number; // number of people
   hours: number; // hours each
   areaId: string | null;
+  notes: string; // per-crew notes (STACK workforce "Notes" column)
 };
 
 export type EquipmentRow = {
@@ -101,6 +102,7 @@ export function sanitizeReportBody(input: unknown): DailyReportBody {
           quantity: toNumber(row.quantity),
           hours: toNumber(row.hours),
           areaId: strOrNull(row.areaId),
+          notes: str(row.notes),
         };
       })
     : [];

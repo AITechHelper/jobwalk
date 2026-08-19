@@ -90,23 +90,35 @@ export async function PATCH(
     photoId?: unknown;
     annotatedBlobUrl?: unknown;
     annotation?: unknown;
+    caption?: unknown;
   };
   if (typeof body.photoId !== "string" || !body.photoId) {
     return NextResponse.json({ error: "photoId required" }, { status: 400 });
   }
-  if (typeof body.annotatedBlobUrl !== "string" || !body.annotatedBlobUrl) {
+
+  // Two update modes: saving an annotation (needs annotatedBlobUrl), or editing
+  // just the caption. Build the patch from whichever fields are present.
+  const updates: Partial<typeof reportPhotos.$inferInsert> = {};
+  if (typeof body.annotatedBlobUrl === "string" && body.annotatedBlobUrl) {
+    updates.annotatedBlobUrl = body.annotatedBlobUrl;
+    updates.annotation = body.annotation ?? null;
+  }
+  if (body.caption !== undefined) {
+    updates.caption =
+      typeof body.caption === "string" && body.caption.trim()
+        ? body.caption.trim()
+        : null;
+  }
+  if (Object.keys(updates).length === 0) {
     return NextResponse.json(
-      { error: "annotatedBlobUrl required" },
+      { error: "Nothing to update" },
       { status: 400 },
     );
   }
 
   const [updated] = await getDb()
     .update(reportPhotos)
-    .set({
-      annotatedBlobUrl: body.annotatedBlobUrl,
-      annotation: body.annotation ?? null,
-    })
+    .set(updates)
     .where(and(eq(reportPhotos.id, body.photoId), eq(reportPhotos.reportId, id)))
     .returning();
 

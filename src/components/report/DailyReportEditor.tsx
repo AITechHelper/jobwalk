@@ -43,6 +43,13 @@ type Comment = {
   createdAt: string;
 };
 
+type ReportFile = {
+  id: string;
+  name: string;
+  blobUrl: string;
+  contentType: string | null;
+};
+
 type ReportData = {
   id: string;
   reportDate: string;
@@ -51,6 +58,9 @@ type ReportData = {
   reporterName: string | null;
   generalContractor: string | null;
   reviewerName: string | null;
+  dateApproved: string | null;
+  createdByName: string | null;
+  createdAt: string;
   body: DailyReportBody;
   weather: WeatherData | null;
 };
@@ -87,6 +97,7 @@ export default function DailyReportEditor({
   crew,
   activities,
   photos,
+  files,
   comments,
 }: {
   canEdit: boolean;
@@ -102,6 +113,7 @@ export default function DailyReportEditor({
   crew: Crew[];
   activities: Activity[];
   photos: Photo[];
+  files: ReportFile[];
   comments: Comment[];
 }) {
   const router = useRouter();
@@ -142,6 +154,7 @@ export default function DailyReportEditor({
     report.generalContractor ?? "",
   );
   const [reviewerName, setReviewerName] = useState(report.reviewerName ?? "");
+  const [dateApproved, setDateApproved] = useState(report.dateApproved ?? "");
   const [body, setBody] = useState<DailyReportBody>(report.body);
   const [statusValue, setStatusValue] = useState(report.status);
 
@@ -154,6 +167,7 @@ export default function DailyReportEditor({
     setReporterName(report.reporterName ?? "");
     setGeneralContractor(report.generalContractor ?? "");
     setReviewerName(report.reviewerName ?? "");
+    setDateApproved(report.dateApproved ?? "");
     setBody(report.body);
     setStatusValue(report.status);
     setError(null);
@@ -174,6 +188,7 @@ export default function DailyReportEditor({
           reporterName,
           generalContractor,
           reviewerName,
+          dateApproved: dateApproved || null,
           body,
         }),
       });
@@ -203,6 +218,19 @@ export default function DailyReportEditor({
     }
   }
 
+  async function savePhotoCaption(photoId: string, caption: string) {
+    try {
+      await fetch(`/api/reports/${report.id}/photos`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photoId, caption }),
+      });
+      router.refresh();
+    } catch {
+      // best-effort; the typed value stays in the field
+    }
+  }
+
   const isCommercial = (editing ? jobType : report.jobType) === "commercial";
 
   if (editing) {
@@ -224,6 +252,8 @@ export default function DailyReportEditor({
           setGeneralContractor,
           reviewerName,
           setReviewerName,
+          dateApproved,
+          setDateApproved,
           body,
           setBody,
           statusValue,
@@ -318,6 +348,9 @@ export default function DailyReportEditor({
             <Field label="Reporter" value={report.reporterName} />
             <Field label="General contractor" value={report.generalContractor} />
             <Field label="Reviewer" value={report.reviewerName} />
+            <Field label="Created by" value={report.createdByName} />
+            <DateField label="Created on" iso={report.createdAt} />
+            <DateField label="Date approved" date={report.dateApproved} />
           </section>
 
           {report.weather && (
@@ -381,6 +414,7 @@ export default function DailyReportEditor({
                   ]
                     .filter(Boolean)
                     .join(" · "),
+                  notes: r.notes,
                   qty: r.quantity,
                   hours: r.hours,
                   total: rowTotalHours(r),
@@ -428,20 +462,43 @@ export default function DailyReportEditor({
                     )}
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                       {group.photos.map((p) => (
-                        <div key={p.id} className="relative">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={p.annotatedBlobUrl ?? p.blobUrl}
-                            alt={p.caption ?? ""}
-                            className="aspect-square w-full rounded-lg border border-neutral-200 object-cover"
-                          />
-                          {canEdit && (
-                            <button
-                              onClick={() => setAnnotatingPhoto(p)}
-                              className="absolute bottom-1 right-1 rounded-md bg-black/60 px-2 py-1 text-xs font-semibold text-white backdrop-blur transition hover:bg-black/80 print:hidden"
+                        <div key={p.id}>
+                          <div className="relative">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={p.annotatedBlobUrl ?? p.blobUrl}
+                              alt={p.caption ?? ""}
+                              className="aspect-square w-full rounded-lg border border-neutral-200 object-cover"
+                            />
+                            {canEdit && (
+                              <button
+                                onClick={() => setAnnotatingPhoto(p)}
+                                className="absolute bottom-1 right-1 rounded-md bg-black/60 px-2 py-1 text-xs font-semibold text-white backdrop-blur transition hover:bg-black/80 print:hidden"
+                              >
+                                {p.annotatedBlobUrl ? "Edit markup" : "Annotate"}
+                              </button>
+                            )}
+                          </div>
+                          {p.caption && (
+                            <p
+                              className={`mt-1 text-xs text-neutral-500 ${
+                                canEdit ? "hidden print:block" : ""
+                              }`}
                             >
-                              {p.annotatedBlobUrl ? "Edit markup" : "Annotate"}
-                            </button>
+                              {p.caption}
+                            </p>
+                          )}
+                          {canEdit && (
+                            <input
+                              defaultValue={p.caption ?? ""}
+                              onBlur={(e) => {
+                                if (e.target.value !== (p.caption ?? "")) {
+                                  savePhotoCaption(p.id, e.target.value);
+                                }
+                              }}
+                              placeholder="Add a note…"
+                              className="mt-1 w-full rounded border border-neutral-200 px-2 py-1 text-xs text-neutral-700 focus:border-brand focus:outline-none print:hidden"
+                            />
                           )}
                         </div>
                       ))}
@@ -449,6 +506,39 @@ export default function DailyReportEditor({
                   </div>
                 ))}
               </div>
+            </Section>
+          )}
+
+          {/* Documents & Files (non-photo attachments) */}
+          {files.length > 0 && (
+            <Section title="Documents & Files">
+              <ul className="flex flex-col gap-1.5">
+                {files.map((f) => (
+                  <li key={f.id}>
+                    <a
+                      href={f.blobUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm font-medium text-brand hover:underline"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-4 w-4 shrink-0"
+                        aria-hidden
+                      >
+                        <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                        <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z" />
+                      </svg>
+                      {f.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </Section>
           )}
 
@@ -555,6 +645,9 @@ export default function DailyReportEditor({
         <PhotoManager reportId={report.id} areas={areas} isCommercial={isCommercial} />
       )}
 
+      {/* Document/file attachments for editors, outside the printable sheet */}
+      {canEdit && <FilesManager reportId={report.id} files={files} />}
+
       {/* Comments — every member can post */}
       <div className="print:hidden">
         <ReportComments reportId={report.id} comments={comments} />
@@ -618,6 +711,30 @@ function Field({ label, value }: { label: string; value: string | null }) {
   );
 }
 
+// A header field that formats a date. Pass `iso` (full timestamp) or `date`
+// (YYYY-MM-DD); renders "—" when empty.
+function DateField({
+  label,
+  iso,
+  date,
+}: {
+  label: string;
+  iso?: string;
+  date?: string | null;
+}) {
+  const value = iso ?? (date ? `${date}T12:00:00Z` : null);
+  return (
+    <div>
+      <p className="text-[11px] uppercase tracking-wide text-neutral-400">
+        {label}
+      </p>
+      <p className="font-medium text-neutral-800">
+        {value ? <LocalDate iso={value} format="long" /> : "—"}
+      </p>
+    </div>
+  );
+}
+
 function Section({
   title,
   children,
@@ -643,7 +760,14 @@ function ResourceTable({
   rows,
   total,
 }: {
-  rows: { name: string; meta: string; qty: number; hours: number; total: number }[];
+  rows: {
+    name: string;
+    meta: string;
+    notes?: string;
+    qty: number;
+    hours: number;
+    total: number;
+  }[];
   total: number;
 }) {
   return (
@@ -664,6 +788,11 @@ function ResourceTable({
                 <span className="font-medium text-neutral-800">{r.name}</span>
                 {r.meta && (
                   <span className="block text-xs text-neutral-400">{r.meta}</span>
+                )}
+                {r.notes && (
+                  <span className="block text-xs italic text-neutral-500">
+                    {r.notes}
+                  </span>
                 )}
               </td>
               <td className="py-1.5 text-right tabular-nums">{r.qty}</td>
@@ -812,6 +941,119 @@ function PhotoManager({
 }
 
 // ---------------------------------------------------------------------------
+// Files manager (editors only) — attach non-photo documents (PDFs, specs).
+// ---------------------------------------------------------------------------
+
+function FilesManager({
+  reportId,
+  files,
+}: {
+  reportId: string;
+  files: ReportFile[];
+}) {
+  const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onFiles(list: FileList | null) {
+    if (!list || list.length === 0) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const uploaded: { url: string; name: string; contentType: string }[] = [];
+      for (let i = 0; i < list.length; i++) {
+        const f = list[i];
+        const res = await upload(
+          `reports/${reportId}/files/${Date.now()}-${i}-${f.name}`,
+          f,
+          { access: "public", handleUploadUrl: "/api/upload" },
+        );
+        uploaded.push({ url: res.url, name: f.name, contentType: f.type });
+      }
+      const res = await fetch(`/api/reports/${reportId}/files`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ files: uploaded }),
+      });
+      if (!res.ok) throw new Error();
+      router.refresh();
+    } catch {
+      setError("Upload failed. Try again.");
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  async function remove(fileId: string) {
+    setRemovingId(fileId);
+    try {
+      const res = await fetch(
+        `/api/reports/${reportId}/files?fileId=${fileId}`,
+        { method: "DELETE" },
+      );
+      if (!res.ok) throw new Error();
+      router.refresh();
+    } catch {
+      setError("Couldn't remove file.");
+    } finally {
+      setRemovingId(null);
+    }
+  }
+
+  return (
+    <div className="mt-4 flex flex-col gap-2 rounded-xl border border-white/20 bg-navy/50 p-4 print:hidden">
+      <span className="text-xs font-semibold uppercase tracking-wide text-white/50">
+        Documents &amp; files
+      </span>
+
+      {files.length > 0 && (
+        <ul className="flex flex-col gap-1.5">
+          {files.map((f) => (
+            <li
+              key={f.id}
+              className="flex items-center justify-between gap-2 rounded-lg bg-navy/50 px-3 py-2 text-sm"
+            >
+              <a
+                href={f.blobUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-w-0 flex-1 truncate text-white/85 hover:text-white"
+              >
+                {f.name}
+              </a>
+              <button
+                onClick={() => remove(f.id)}
+                disabled={removingId === f.id}
+                aria-label={`Remove ${f.name}`}
+                className="shrink-0 rounded-lg border border-white/20 px-2 py-1 text-white/50 transition hover:text-red-400 disabled:opacity-50"
+              >
+                {removingId === f.id ? "…" : "×"}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          onChange={(e) => onFiles(e.target.files)}
+          disabled={uploading}
+          className="text-sm text-white/70 file:mr-3 file:rounded-lg file:border-0 file:bg-brand file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
+        />
+        {uploading && <Spinner className="h-4 w-4" />}
+      </div>
+      {error && <p className="text-sm text-red-400">{error}</p>}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Edit form — kept in a separate component so the read view stays lean.
 // ---------------------------------------------------------------------------
 
@@ -826,6 +1068,8 @@ type FormState = {
   setGeneralContractor: (v: string) => void;
   reviewerName: string;
   setReviewerName: (v: string) => void;
+  dateApproved: string;
+  setDateApproved: (v: string) => void;
   body: DailyReportBody;
   setBody: (v: DailyReportBody) => void;
   statusValue: "draft" | "completed";
@@ -872,6 +1116,7 @@ function DailyReportForm({
       quantity: 1,
       hours: 8,
       areaId: null,
+      notes: "",
     };
     setBody({ ...body, workforce: [...body.workforce, row] });
   }
@@ -996,13 +1241,13 @@ function DailyReportForm({
             className={`mt-1 ${input}`}
           />
         </label>
-        <label className="col-span-2 block">
+        <label className="block">
           <span className={label}>Reviewer</span>
           <input
             value={s.reviewerName}
             onChange={(e) => s.setReviewerName(e.target.value)}
             list="reviewer-team-list"
-            placeholder="Optional — pick from the team or type a name"
+            placeholder="Optional — name"
             className={`mt-1 ${input}`}
           />
           <datalist id="reviewer-team-list">
@@ -1010,6 +1255,15 @@ function DailyReportForm({
               <option key={c.id} value={c.name} />
             ))}
           </datalist>
+        </label>
+        <label className="block">
+          <span className={label}>Date approved</span>
+          <input
+            type="date"
+            value={s.dateApproved}
+            onChange={(e) => s.setDateApproved(e.target.value)}
+            className={`mt-1 ${input}`}
+          />
         </label>
       </div>
 
@@ -1141,6 +1395,14 @@ function DailyReportForm({
                     ×
                   </button>
                 </div>
+                <input
+                  value={row.notes}
+                  onChange={(e) =>
+                    updateWorkforce(i, { notes: e.target.value })
+                  }
+                  placeholder="Notes (optional)"
+                  className={input}
+                />
               </div>
             </div>
           ))}

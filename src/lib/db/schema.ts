@@ -272,6 +272,9 @@ export const dailyReports = pgTable("daily_reports", {
   reporterName: text("reporter_name"),
   generalContractor: text("general_contractor"),
   reviewerName: text("reviewer_name"),
+  // Date the report was approved/signed off (STACK "Date Approved"). Null until
+  // approved.
+  dateApproved: date("date_approved"),
   // The roster teammate responsible for this report (who it's assigned to).
   // Set when an owner creates/assigns a report from the Home hub. Null =
   // unassigned. See lib/team.ts.
@@ -311,6 +314,22 @@ export const reportPhotos = pgTable("report_photos", {
   // in the photo's natural-pixel space. See PhotoAnnotator.
   annotation: jsonb("annotation"),
   caption: text("caption"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+// Non-photo files attached to a report (PDFs, specs, submittals) — the STACK
+// "Linked Documents & Files" section. Stored in Vercel Blob; we keep the URL,
+// display name, and content type.
+export const reportFiles = pgTable("report_files", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  reportId: uuid("report_id")
+    .notNull()
+    .references(() => dailyReports.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  blobUrl: text("blob_url").notNull(),
+  contentType: text("content_type"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
