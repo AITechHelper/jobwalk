@@ -161,7 +161,7 @@ export default function ProjectDetail({
 
   const TABS: { id: TabId; label: string }[] = [
     { id: "reports", label: "Reports" },
-    { id: "walkthroughs", label: "Walkthroughs" },
+    { id: "walkthroughs", label: "Walks" },
     { id: "plans", label: "Plans" },
     { id: "team", label: "Team" },
     { id: "details", label: "Details" },
@@ -184,24 +184,22 @@ export default function ProjectDetail({
         </span>
       </div>
 
-      {/* Tab bar (scrolls horizontally on narrow phones) */}
-      <div className="mt-4 -mx-4 overflow-x-auto border-b border-white/15 px-4">
-        <div className="flex min-w-max gap-1">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`relative whitespace-nowrap px-3 py-2.5 text-base font-semibold transition ${
-                tab === t.id ? "text-brand" : "text-white/60 hover:text-white"
-              }`}
-            >
-              {t.label}
-              {tab === t.id && (
-                <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-brand" />
-              )}
-            </button>
-          ))}
-        </div>
+      {/* Tab bar — fixed equal columns that all fit on screen (no horizontal
+          scroll, so there's nothing to drag around). */}
+      <div className="mt-4 flex border-b border-white/15">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`-mb-px min-w-0 flex-1 truncate border-b-2 px-0.5 py-2.5 text-center text-sm font-semibold transition ${
+              tab === t.id
+                ? "border-brand text-brand"
+                : "border-transparent text-white/60 hover:text-white"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       {error && <p className="mt-3 text-base text-red-400">{error}</p>}
