@@ -32,6 +32,8 @@ const ROLE_LABEL: Record<Member["role"], string> = {
   client: "Client",
 };
 
+type TabId = "details" | "reports" | "walkthroughs" | "plans" | "team";
+
 export default function ProjectDetail({
   project,
   access,
@@ -56,6 +58,7 @@ export default function ProjectDetail({
   walkthroughs: JobListItem[];
 }) {
   const router = useRouter();
+  const [tab, setTab] = useState<TabId>("reports");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -156,266 +159,297 @@ export default function ProjectDetail({
     }
   }
 
+  const TABS: { id: TabId; label: string }[] = [
+    { id: "reports", label: "Reports" },
+    { id: "walkthroughs", label: "Walkthroughs" },
+    { id: "plans", label: "Plans" },
+    { id: "team", label: "Team" },
+    { id: "details", label: "Details" },
+  ];
+
   return (
     <div className="mt-3">
+      {/* Project header — always visible for context */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">{project.name}</h1>
-          <p className="mt-1.5 text-base text-white/65">
+          <h1 className="text-2xl font-bold">{project.name}</h1>
+          <p className="mt-1 text-sm text-white/65">
             <span className="capitalize">{project.jobType}</span>
             {project.clientName && <> · {project.clientName}</>}
             {project.siteAddress && <> · {project.siteAddress}</>}
           </p>
-          {!project.hasCoords && project.siteAddress && (
-            <p className="mt-1.5 text-sm text-amber-400/90">
-              Couldn&apos;t geocode this address — weather won&apos;t auto-pull.
-            </p>
-          )}
         </div>
         <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-white/70">
           You: {ROLE_LABEL[access.role]}
         </span>
       </div>
 
+      {/* Tab bar (scrolls horizontally on narrow phones) */}
+      <div className="mt-4 -mx-4 overflow-x-auto border-b border-white/15 px-4">
+        <div className="flex min-w-max gap-1">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`relative whitespace-nowrap px-3 py-2.5 text-base font-semibold transition ${
+                tab === t.id ? "text-brand" : "text-white/60 hover:text-white"
+              }`}
+            >
+              {t.label}
+              {tab === t.id && (
+                <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-brand" />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {error && <p className="mt-3 text-base text-red-400">{error}</p>}
 
-      {/* Walkthroughs — the recordings that belong to this job. This section is
-          what ties a job to its walkthroughs, which the app was missing. */}
-      <section className="mt-7">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-white/60">
-          Walkthroughs
-        </h2>
-
-        {access.canEdit && (
-          <Link
-            href={`/record?job=${project.id}`}
-            className="mt-3 flex items-center justify-center gap-2 rounded-2xl bg-brand px-5 py-4 text-lg font-semibold text-white transition active:scale-[0.99] hover:bg-brand/85"
-          >
-            <span aria-hidden className="text-2xl leading-none">
-              🎙️
-            </span>
-            Record a walkthrough
-          </Link>
-        )}
-
-        {walkthroughs.length === 0 ? (
-          <p className="mt-3 text-base text-white/55">No walkthroughs yet.</p>
-        ) : (
-          <JobList jobs={walkthroughs} />
-        )}
-      </section>
-
-      {/* Daily reports */}
-      <section className="mt-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-white/60">
-            Daily reports
-          </h2>
+      {/* REPORTS */}
+      {tab === "reports" && (
+        <section className="mt-5">
           {access.canEdit && (
             <button
               onClick={newReport}
               disabled={creating}
-              className="flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-base font-semibold text-white transition hover:bg-brand/85 disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand px-5 py-4 text-lg font-semibold text-white transition active:scale-[0.99] hover:bg-brand/85 disabled:opacity-50"
             >
-              {creating && <Spinner className="h-4 w-4" />}+ New report
+              {creating && <Spinner className="h-5 w-5" />}+ New daily report
             </button>
           )}
-        </div>
 
-        {reports.length === 0 ? (
-          <p className="mt-3 text-base text-white/55">No reports yet.</p>
-        ) : (
-          <ul className="mt-3 flex flex-col gap-2">
-            {reports.map((r) => (
-              <li key={r.id}>
-                <Link
-                  href={`/reports/${r.id}`}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-white/20 bg-navy/50 px-4 py-3 transition hover:border-brand/50"
-                >
-                  <span className="min-w-0">
-                    <span className="block font-medium">
-                      <LocalDate
-                        iso={`${r.reportDate}T12:00:00Z`}
-                        format="long"
-                      />
-                    </span>
-                    {r.assignedToName && (
-                      <span className="block text-xs text-white/45">
-                        Assigned: {r.assignedToName}
+          {reports.length === 0 ? (
+            <p className="mt-4 text-base text-white/55">No reports yet.</p>
+          ) : (
+            <ul className="mt-4 flex flex-col gap-2">
+              {reports.map((r) => (
+                <li key={r.id}>
+                  <Link
+                    href={`/reports/${r.id}`}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-white/20 bg-navy/50 px-4 py-3 transition hover:border-brand/50"
+                  >
+                    <span className="min-w-0">
+                      <span className="block font-medium">
+                        <LocalDate
+                          iso={`${r.reportDate}T12:00:00Z`}
+                          format="long"
+                        />
                       </span>
-                    )}
-                  </span>
-                  <span className="flex shrink-0 items-center gap-2 text-xs text-white/50">
-                    {r.reporterName}
-                    <span
-                      className={`rounded-full px-2 py-0.5 font-semibold ${
-                        r.status === "completed"
-                          ? "bg-green-500/15 text-green-400"
-                          : "bg-white/10 text-white/60"
-                      }`}
-                    >
-                      {r.status === "completed" ? "Completed" : "Draft"}
+                      {r.assignedToName && (
+                        <span className="block text-xs text-white/45">
+                          Assigned: {r.assignedToName}
+                        </span>
+                      )}
                     </span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                    <span className="flex shrink-0 items-center gap-2 text-xs text-white/50">
+                      {r.reporterName}
+                      <span
+                        className={`rounded-full px-2 py-0.5 font-semibold ${
+                          r.status === "completed"
+                            ? "bg-green-500/15 text-green-400"
+                            : "bg-white/10 text-white/60"
+                        }`}
+                      >
+                        {r.status === "completed" ? "Completed" : "Draft"}
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
-      {/* Report defaults — pre-fill values reused on every daily report */}
-      {access.canEdit && (
-        <section className="mt-8">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-white/60">
-            Report defaults
-          </h2>
-          <label className="mt-2 block text-sm text-white/60">
-            Default general contractor
-          </label>
-          <div className="mt-1 flex gap-2">
-            <input
-              value={gc}
-              onChange={(e) => {
-                setGc(e.target.value);
-                setGcSaved(false);
-              }}
-              placeholder="e.g. Turner Construction"
-              className={inputClasses}
-            />
-            <button
-              onClick={saveGc}
-              disabled={savingGc || gc === (project.generalContractor ?? "")}
-              className="shrink-0 rounded-lg border border-white/25 px-3 py-2 text-sm font-semibold text-white/80 transition hover:text-white disabled:opacity-50"
+      {/* WALKTHROUGHS */}
+      {tab === "walkthroughs" && (
+        <section className="mt-5">
+          {access.canEdit && (
+            <Link
+              href={`/record?job=${project.id}`}
+              className="flex items-center justify-center gap-2 rounded-2xl bg-brand px-5 py-4 text-lg font-semibold text-white transition active:scale-[0.99] hover:bg-brand/85"
             >
-              {savingGc ? "Saving…" : gcSaved ? "Saved ✓" : "Save"}
-            </button>
-          </div>
-          <p className="mt-1 text-xs text-white/40">
-            New daily reports start with this GC filled in.
+              Record a walkthrough
+            </Link>
+          )}
+
+          {walkthroughs.length === 0 ? (
+            <p className="mt-4 text-base text-white/55">No walkthroughs yet.</p>
+          ) : (
+            <div className="mt-4">
+              <JobList jobs={walkthroughs} />
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* PLANS */}
+      {tab === "plans" && (
+        <section className="mt-5">
+          <Link
+            href={`/projects/${project.id}/plans`}
+            className="flex items-center justify-between rounded-2xl border border-white/20 bg-navy/50 px-5 py-4 transition hover:border-brand/50"
+          >
+            <span className="text-lg font-semibold">
+              Plan takeoff &amp; measurements
+            </span>
+            <span className="text-white/50">→</span>
+          </Link>
+          <p className="mt-2 text-sm text-white/45">
+            Upload site plans and measure areas, lengths, and counts to scale.
           </p>
         </section>
       )}
 
-      {/* Plan takeoff (Part 2) */}
-      <section className="mt-8">
-        <Link
-          href={`/projects/${project.id}/plans`}
-          className="flex items-center justify-between rounded-2xl border border-white/25 bg-navy/50 px-5 py-4 transition hover:border-brand/50"
-        >
-          <span className="text-lg font-semibold">
-            Plan takeoff &amp; measurements
-          </span>
-          <span className="text-white/50">→</span>
-        </Link>
-      </section>
-
-      {/* Areas — only meaningful for commercial jobs */}
-      {isCommercial && (
-        <section className="mt-8">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-white/60">
-            Rooms / areas
-          </h2>
-          {areas.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
-              {areas.map((a) => (
-                <span
-                  key={a.id}
-                  className="rounded-full bg-white/10 px-3 py-1 text-sm text-white/70"
-                >
-                  {a.name}
-                </span>
-              ))}
-            </div>
-          )}
-          {access.canEdit && (
-            <div className="mt-2 flex gap-2">
-              <input
-                value={areaName}
-                onChange={(e) => setAreaName(e.target.value)}
-                placeholder="e.g. Suite 200 / Lobby"
-                className={inputClasses}
-              />
-              <button
-                onClick={addArea}
-                disabled={addingArea || !areaName.trim()}
-                className="shrink-0 rounded-lg border border-white/25 px-3 py-2 text-sm font-semibold text-white/80 transition hover:text-white disabled:opacity-50"
+      {/* TEAM */}
+      {tab === "team" && (
+        <section className="mt-5">
+          <ul className="flex flex-col gap-1.5">
+            {members.map((m) => (
+              <li
+                key={m.id}
+                className="flex items-center justify-between rounded-lg bg-navy/50 px-3 py-2.5 text-sm"
               >
-                Add
-              </button>
+                <span>
+                  {m.name} <span className="text-white/40">· {m.email}</span>
+                </span>
+                <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold text-white/70">
+                  {ROLE_LABEL[m.role]}
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          {access.role === "owner" && (
+            <div className="mt-3 flex flex-col gap-2 rounded-xl border border-white/20 bg-navy/50 p-3">
+              <span className="text-xs font-semibold text-white/50">
+                Add someone to this project by their JobWalker account email
+              </span>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="teammate@example.com"
+                  className={inputClasses}
+                />
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value as Member["role"])}
+                  className="rounded-lg border border-white/20 bg-navy px-3 py-2 text-foreground focus:border-brand focus:outline-none"
+                >
+                  <option value="foreman">Foreman (can edit)</option>
+                  <option value="owner">Owner (can edit)</option>
+                  <option value="gc">GC (view only)</option>
+                  <option value="client">Client (view only)</option>
+                </select>
+                <button
+                  onClick={addMember}
+                  disabled={addingMember || !email.trim()}
+                  className="shrink-0 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand/85 disabled:opacity-50"
+                >
+                  {addingMember ? "Adding…" : "Add"}
+                </button>
+              </div>
             </div>
           )}
         </section>
       )}
 
-      {/* Team / access */}
-      <section className="mt-8">
-        <h2 className="text-xs font-bold uppercase tracking-wide text-white/50">
-          Team &amp; access
-        </h2>
-        <ul className="mt-2 flex flex-col gap-1.5">
-          {members.map((m) => (
-            <li
-              key={m.id}
-              className="flex items-center justify-between rounded-lg bg-navy/50 px-3 py-2 text-sm"
-            >
-              <span>
-                {m.name}{" "}
-                <span className="text-white/40">· {m.email}</span>
-              </span>
-              <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs font-semibold text-white/70">
-                {ROLE_LABEL[m.role]}
-              </span>
-            </li>
-          ))}
-        </ul>
+      {/* DETAILS (settings) */}
+      {tab === "details" && (
+        <div className="mt-5 flex flex-col gap-8">
+          {!project.hasCoords && project.siteAddress && (
+            <p className="text-sm text-amber-400/90">
+              Couldn&apos;t geocode this address — weather won&apos;t auto-pull.
+            </p>
+          )}
 
-        {access.role === "owner" && (
-          <div className="mt-3 flex flex-col gap-2 rounded-xl border border-white/20 bg-navy/50 p-3">
-            <span className="text-xs font-semibold text-white/50">
-              Add a teammate by their JobWalker account email
-            </span>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="teammate@example.com"
-                className={inputClasses}
+          {/* Report defaults */}
+          {access.canEdit && (
+            <section>
+              <h2 className="text-sm font-bold uppercase tracking-wide text-white/60">
+                Report defaults
+              </h2>
+              <label className="mt-2 block text-sm text-white/60">
+                Default general contractor
+              </label>
+              <div className="mt-1 flex gap-2">
+                <input
+                  value={gc}
+                  onChange={(e) => {
+                    setGc(e.target.value);
+                    setGcSaved(false);
+                  }}
+                  placeholder="e.g. Turner Construction"
+                  className={inputClasses}
+                />
+                <button
+                  onClick={saveGc}
+                  disabled={savingGc || gc === (project.generalContractor ?? "")}
+                  className="shrink-0 rounded-lg border border-white/25 px-3 py-2 text-sm font-semibold text-white/80 transition hover:text-white disabled:opacity-50"
+                >
+                  {savingGc ? "Saving…" : gcSaved ? "Saved ✓" : "Save"}
+                </button>
+              </div>
+              <p className="mt-1 text-xs text-white/40">
+                New daily reports start with this GC filled in.
+              </p>
+            </section>
+          )}
+
+          {/* Rooms / areas — commercial only */}
+          {isCommercial && (
+            <section>
+              <h2 className="text-sm font-bold uppercase tracking-wide text-white/60">
+                Rooms / areas
+              </h2>
+              {areas.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {areas.map((a) => (
+                    <span
+                      key={a.id}
+                      className="rounded-full bg-white/10 px-3 py-1 text-sm text-white/70"
+                    >
+                      {a.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {access.canEdit && (
+                <div className="mt-2 flex gap-2">
+                  <input
+                    value={areaName}
+                    onChange={(e) => setAreaName(e.target.value)}
+                    placeholder="e.g. Suite 200 / Lobby"
+                    className={inputClasses}
+                  />
+                  <button
+                    onClick={addArea}
+                    disabled={addingArea || !areaName.trim()}
+                    className="shrink-0 rounded-lg border border-white/25 px-3 py-2 text-sm font-semibold text-white/80 transition hover:text-white disabled:opacity-50"
+                  >
+                    Add
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* Danger zone — owner only */}
+          {access.role === "owner" && (
+            <section className="flex flex-col items-start gap-2 border-t border-white/20 pt-6">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-white/40">
+                Danger zone
+              </h2>
+              <DeleteProjectButton
+                projectId={project.id}
+                projectName={project.name}
               />
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value as Member["role"])}
-                className="rounded-lg border border-white/20 bg-navy px-3 py-2 text-foreground focus:border-brand focus:outline-none"
-              >
-                <option value="foreman">Foreman (can edit)</option>
-                <option value="owner">Owner (can edit)</option>
-                <option value="gc">GC (view only)</option>
-                <option value="client">Client (view only)</option>
-              </select>
-              <button
-                onClick={addMember}
-                disabled={addingMember || !email.trim()}
-                className="shrink-0 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand/85 disabled:opacity-50"
-              >
-                {addingMember ? "Adding…" : "Add"}
-              </button>
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* Danger zone — owner only */}
-      {access.role === "owner" && (
-        <section className="flex flex-col items-start gap-2 border-t border-white/20 pt-6">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-white/40">
-            Danger zone
-          </h2>
-          <DeleteProjectButton
-            projectId={project.id}
-            projectName={project.name}
-          />
-        </section>
+            </section>
+          )}
+        </div>
       )}
     </div>
   );
