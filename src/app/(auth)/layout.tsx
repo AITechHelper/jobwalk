@@ -10,11 +10,14 @@ export default function AuthLayout({
       <div className="text-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/jobwalker-logo.png"
-          alt="JobWalker"
-          className="mx-auto h-24 w-auto"
+          src="/jobwalker-mark.png"
+          alt=""
+          className="mx-auto h-28 w-auto"
         />
-        <p className="mt-2 text-sm text-white/60">
+        <h1 className="mt-3 text-3xl font-bold tracking-tight">
+          Job<span className="text-brand">Walker</span>
+        </h1>
+        <p className="mt-1 text-sm text-white/60">
           Walk the job. Get the report.
         </p>
       </div>
