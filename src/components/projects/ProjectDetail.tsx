@@ -373,7 +373,7 @@ export default function ProjectDetail({
         {access.role === "owner" && (
           <div className="mt-3 flex flex-col gap-2 rounded-xl border border-white/20 bg-navy/50 p-3">
             <span className="text-xs font-semibold text-white/50">
-              Add a teammate by their JobWalk account email
+              Add a teammate by their JobWalker account email
             </span>
             <div className="flex flex-col gap-2 sm:flex-row">
               <input

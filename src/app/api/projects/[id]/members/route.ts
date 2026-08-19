@@ -48,7 +48,7 @@ export async function POST(
     return NextResponse.json(
       {
         error:
-          "No JobWalk account found for that email. They need to sign up first.",
+          "No JobWalker account found for that email. They need to sign up first.",
       },
       { status: 404 },
     );

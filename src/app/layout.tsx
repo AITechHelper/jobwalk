@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "JobWalk",
+  title: "JobWalker",
   description:
     "Walk the job, narrate what you see, snap photos — get a client-ready report.",
 };

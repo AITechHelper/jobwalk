@@ -24,7 +24,7 @@ export async function GET() {
 }
 
 // POST — add a teammate by typed name + email + role. No account required; if a
-// JobWalk account already exists for that email, link it now (otherwise it gets
+// JobWalker account already exists for that email, link it now (otherwise it gets
 // linked when they sign up — see the onboarding route).
 export async function POST(req: Request) {
   const authed = await requireContractor();

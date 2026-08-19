@@ -34,16 +34,13 @@ export default async function AppLayout({
     <div className="flex min-h-screen flex-col bg-background">
       <header className="flex items-center justify-between gap-3 border-b border-white/30 bg-navy px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] print:hidden">
         {/* Logo, top-left */}
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <span
-            aria-hidden
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-base font-black text-white"
-          >
-            J
-          </span>
-          <span className="text-xl font-bold tracking-tight">
-            Job<span className="text-brand">Walk</span>
-          </span>
+        <Link href="/dashboard" className="flex items-center" aria-label="JobWalker home">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/jobwalker-logo.png"
+            alt="JobWalker"
+            className="h-11 w-auto"
+          />
         </Link>
 
         {/* Account, top-right */}

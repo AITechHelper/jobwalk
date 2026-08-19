@@ -100,7 +100,7 @@ export async function geocodeAddress(
     url.searchParams.set("format", "json");
     url.searchParams.set("limit", "1");
     const res = await fetch(url, {
-      headers: { "User-Agent": "JobWalk/1.0 (https://aitechhelper.com)" },
+      headers: { "User-Agent": "JobWalker/1.0 (https://aitechhelper.com)" },
       signal: AbortSignal.timeout(8000),
     });
     if (res.ok) {
@@ -230,7 +230,7 @@ async function fetchOpenMeteo(
 // ---------------------------------------------------------------------------
 
 const NWS_HEADERS = {
-  "User-Agent": "JobWalk/1.0 (https://aitechhelper.com)",
+  "User-Agent": "JobWalker/1.0 (https://aitechhelper.com)",
   Accept: "application/geo+json",
 };
 

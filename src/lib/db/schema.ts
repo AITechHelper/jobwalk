@@ -211,7 +211,7 @@ export const teamMembers = pgTable("team_members", {
 
 // Company roster: the owner types each teammate's name, email, and role
 // (gc / contractor / client). No account is required to add someone — the name
-// and email are just typed in. `memberId` links to a JobWalk account when one
+// and email are just typed in. `memberId` links to a JobWalker account when one
 // exists for that email (set at add time, or backfilled when the teammate later
 // signs up); it's the hook for future account-aware features. Distinct from
 // `team_members` (free-text crew for the workforce table) and `project_members`
@@ -227,7 +227,7 @@ export const teammates = pgTable("teammates", {
   // "gc" | "contractor" | "client" — free text so it isn't tied to the
   // project_role enum used for access control.
   role: text("role").notNull().default("contractor"),
-  // Linked JobWalk account for this email, if any (nullable).
+  // Linked JobWalker account for this email, if any (nullable).
   memberId: uuid("member_id").references(() => contractors.id, {
     onDelete: "set null",
   }),

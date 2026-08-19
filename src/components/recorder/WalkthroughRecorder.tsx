@@ -132,7 +132,7 @@ export default function WalkthroughRecorder({
       setPhase("recording");
     } catch {
       setError(
-        "JobWalk needs camera and microphone access to record a walkthrough. Allow both in your settings and try again.",
+        "JobWalker needs camera and microphone access to record a walkthrough. Allow both in your settings and try again.",
       );
     } finally {
       setStarting(false);
@@ -340,7 +340,7 @@ export default function WalkthroughRecorder({
     return (
       <div className="mx-auto flex max-w-md flex-col gap-5 px-5 py-8">
         <div>
-          <h1 className="text-2xl font-bold">How JobWalk creates your report</h1>
+          <h1 className="text-2xl font-bold">How JobWalker creates your report</h1>
           <p className="mt-2 text-sm leading-relaxed text-white/60">
             Before you record, here&apos;s exactly what happens to your data.
             We need your permission first.
@@ -681,7 +681,7 @@ export default function WalkthroughRecorder({
               Before we generate your report
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-white/70">
-              To create your report, JobWalk sends your{" "}
+              To create your report, JobWalker sends your{" "}
               <strong className="text-white">audio recording</strong> and{" "}
               <strong className="text-white">photos</strong> to two AI providers:
             </p>

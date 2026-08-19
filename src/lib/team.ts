@@ -7,7 +7,7 @@ export type RosterEntry = {
   name: string;
   email: string | null;
   role: string; // "gc" | "contractor" | "client"
-  linked: boolean; // true once a JobWalk account exists for this email
+  linked: boolean; // true once a JobWalker account exists for this email
 };
 
 // The owner's company roster, oldest first (stable order).

@@ -1,6 +1,6 @@
 import BackLink from "@/components/BackLink";
 
-export const metadata = { title: "Privacy Policy — JobWalk" };
+export const metadata = { title: "Privacy Policy — JobWalker" };
 
 export default function PrivacyPage() {
   return (
@@ -10,9 +10,9 @@ export default function PrivacyPage() {
       <p className="mt-1 text-sm text-white/50">Last updated July 2026</p>
 
       <p className="mt-6 leading-relaxed">
-        JobWalk is built by AI Tech Helper LLC (&quot;we,&quot; &quot;us&quot;),
+        JobWalker is built by AI Tech Helper LLC (&quot;we,&quot; &quot;us&quot;),
         Tulsa, OK. This policy explains what we collect when you use the
-        JobWalk app and why.
+        JobWalker app and why.
       </p>
 
       <h2 className="mt-8 text-lg font-semibold text-white">
@@ -57,7 +57,7 @@ export default function PrivacyPage() {
         Sharing with AI services
       </h2>
       <p className="mt-3 leading-relaxed">
-        To turn a walkthrough into a report, JobWalk shares the following with
+        To turn a walkthrough into a report, JobWalker shares the following with
         third-party AI providers, and only for that purpose:
       </p>
       <ul className="mt-3 flex list-disc flex-col gap-2 pl-5 leading-relaxed">
@@ -72,7 +72,7 @@ export default function PrivacyPage() {
       </ul>
       <p className="mt-3 leading-relaxed">
         <strong>We ask for your permission before any of this is sent.</strong>{" "}
-        The first time you open the recorder, JobWalk shows you what data is
+        The first time you open the recorder, JobWalker shows you what data is
         sent and who it goes to, and you must agree before you can record or
         send anything. No audio, photos, or transcripts are shared with OpenAI
         or Anthropic unless you have given that permission.
@@ -91,7 +91,7 @@ export default function PrivacyPage() {
         Audio and photos are collected directly from your device&apos;s
         microphone and camera, only while you are actively recording a
         walkthrough and only after you grant iOS permission. Account details are
-        collected from what you enter at sign-up and onboarding. JobWalk does
+        collected from what you enter at sign-up and onboarding. JobWalker does
         not access your photo library, contacts, or location.
       </p>
 

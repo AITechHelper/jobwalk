@@ -1,6 +1,6 @@
 import BackLink from "@/components/BackLink";
 
-export const metadata = { title: "Terms of Service — JobWalk" };
+export const metadata = { title: "Terms of Service — JobWalker" };
 
 export default function TermsPage() {
   return (
@@ -10,18 +10,18 @@ export default function TermsPage() {
       <p className="mt-1 text-sm text-white/50">Last updated July 2026</p>
 
       <p className="mt-6 leading-relaxed">
-        These terms govern your use of JobWalk, provided by AI Tech Helper
+        These terms govern your use of JobWalker, provided by AI Tech Helper
         LLC (&quot;we,&quot; &quot;us&quot;). By creating an account, you
         agree to them.
       </p>
 
       <h2 className="mt-8 text-lg font-semibold text-white">The service</h2>
       <p className="mt-3 leading-relaxed">
-        JobWalk lets you record a job-site walkthrough (audio + photos) and
+        JobWalker lets you record a job-site walkthrough (audio + photos) and
         generates a written report using AI transcription and text
         generation. You&apos;re responsible for the accuracy of what you
         narrate and for reviewing the generated report before sending it to a
-        client — JobWalk assists with drafting; it doesn&apos;t replace your
+        client — JobWalker assists with drafting; it doesn&apos;t replace your
         professional judgment.
       </p>
 
@@ -44,7 +44,7 @@ export default function TermsPage() {
         Acceptable use
       </h2>
       <p className="mt-3 leading-relaxed">
-        Don&apos;t use JobWalk to record or share content you don&apos;t have
+        Don&apos;t use JobWalker to record or share content you don&apos;t have
         the right to capture, or in a way that violates others&apos;
         privacy or applicable law.
       </p>
@@ -53,7 +53,7 @@ export default function TermsPage() {
         Disclaimer &amp; liability
       </h2>
       <p className="mt-3 leading-relaxed">
-        JobWalk is provided &quot;as is,&quot; without warranties of any
+        JobWalker is provided &quot;as is,&quot; without warranties of any
         kind. AI-generated reports may contain errors — review them before
         sending. To the extent permitted by law, AI Tech Helper LLC isn&apos;t
         liable for damages arising from your use of the app or its generated
