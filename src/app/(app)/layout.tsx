@@ -32,25 +32,30 @@ export default async function AppLayout({
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="flex items-center justify-between gap-3 border-b border-white/30 bg-navy px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] print:hidden">
-        {/* Logo, left */}
+      <header className="grid grid-cols-3 items-center gap-3 border-b border-white/30 bg-navy px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] print:hidden">
+        {/* Figure logo, left */}
         <Link
           href="/dashboard"
-          className="flex items-center gap-2.5"
+          className="justify-self-start"
           aria-label="JobWalker home"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/jobwalker-mark.png" alt="" className="h-16 w-auto" />
-          <span className="text-2xl font-bold tracking-tight">
-            Job<span className="text-brand">Walker</span>
-          </span>
+        </Link>
+
+        {/* JobWalker wordmark, dead center */}
+        <Link
+          href="/dashboard"
+          className="justify-self-center text-2xl font-bold tracking-tight"
+        >
+          Job<span className="text-brand">Walker</span>
         </Link>
 
         {/* Account, right */}
         <Link
           href="/account"
           aria-label="Account"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-sm font-bold text-white transition active:scale-95 hover:border-brand/60"
+          className="flex h-10 w-10 shrink-0 items-center justify-center justify-self-end rounded-full border border-white/25 bg-white/10 text-sm font-bold text-white transition active:scale-95 hover:border-brand/60"
         >
           {initials}
         </Link>
