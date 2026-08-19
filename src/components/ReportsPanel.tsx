@@ -60,7 +60,7 @@ export default function ReportsPanel({
     <section>
       <h2 className="text-2xl font-bold">Reports</h2>
 
-      <div className="mt-3 rounded-xl border border-white/20 bg-navy/50 p-3">
+      <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-3">
         <h3 className="text-sm font-bold uppercase tracking-wide text-white/60">
           New report
         </h3>

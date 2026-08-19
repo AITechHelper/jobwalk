@@ -110,7 +110,7 @@ export default function ProjectsHub({
       </div>
 
       {showNew && (
-        <div className="mt-4 flex flex-col gap-4 rounded-2xl border border-white/25 bg-navy/50 p-4">
+        <div className="mt-4 flex flex-col gap-4 rounded-xl border border-white/10 bg-white/5 p-4">
           <label className="block">
             <span className="text-sm font-semibold uppercase tracking-wide text-white/60">
               Project name
@@ -218,7 +218,7 @@ export default function ProjectsHub({
       )}
 
       {projects.length === 0 ? (
-        <div className="mt-4 rounded-2xl border border-white/20 bg-navy/50 px-4 py-6 text-center">
+        <div className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-6 text-center">
           <p className="text-lg text-white/80">No projects yet.</p>
           <p className="mt-1 text-sm text-white/55">
             Create a project to start recording walkthroughs and daily reports.
@@ -230,7 +230,7 @@ export default function ProjectsHub({
             <li key={p.id}>
               <Link
                 href={`/projects/${p.id}`}
-                className="block rounded-2xl border border-white/25 bg-navy p-4 transition active:scale-[0.99] hover:border-brand/60"
+                className="block rounded-xl border border-white/10 bg-white/5 p-4 transition active:scale-[0.99] hover:border-brand/60"
               >
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-lg font-bold">{p.name}</span>

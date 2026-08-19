@@ -86,7 +86,7 @@ export default function TeamRoster({ roster }: { roster: RosterMember[] }) {
           {roster.map((m) => (
             <li
               key={m.id}
-              className="flex items-center justify-between gap-3 rounded-xl border border-white/20 bg-navy px-4 py-3"
+              className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3"
             >
               <div className="min-w-0">
                 <p className="truncate font-semibold">{m.name}</p>
@@ -118,7 +118,7 @@ export default function TeamRoster({ roster }: { roster: RosterMember[] }) {
         </ul>
       )}
 
-      <div className="mt-3 flex flex-col gap-2 rounded-xl border border-white/20 bg-navy/50 p-3">
+      <div className="mt-3 flex flex-col gap-2 rounded-xl border border-white/10 bg-white/5 p-3">
         <span className="text-sm font-semibold text-white/60">
           Add a teammate
         </span>
